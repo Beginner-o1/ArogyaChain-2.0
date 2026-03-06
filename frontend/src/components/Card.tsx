@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface CardProps {
   children: ReactNode;
@@ -8,13 +8,13 @@ interface CardProps {
 
 export default function Card({ children, title, className = "" }: CardProps) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
+    <div className={`pd-card ${className}`}>
       {title && (
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <div style={{ paddingBottom: "1rem", marginBottom: "0.25rem", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+          <h3 className="pd-card-title">{title}</h3>
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }

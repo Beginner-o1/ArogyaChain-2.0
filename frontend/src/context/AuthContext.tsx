@@ -21,7 +21,7 @@ interface AuthContextType {
   contract: ethers.Contract | null;
   provider: ethers.BrowserProvider | null;
   connectWallet: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     contract: ethers.Contract
   ): Promise<Role> => {
     try {
-      // Check base roles in parallel (faster UX)
       const [isPatient, isDoctor, isPharmacy, isScanCenter] =
         await Promise.all([
           contract.isPatient(addr),
@@ -105,13 +104,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const logout = () => {
-    setAccount(null);
-    setRole(null);
-    setContract(null);
-    setProvider(null);
+  const logout = async () => {
+    try {
+      if (window.ethereum) {
+        await window.ethereum.request({
+          method: "wallet_revokePermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      }
+    } catch (error) {
+      console.error("Error revoking MetaMask permissions:", error);
+    } finally {
+      setAccount(null);
+      setRole(null);
+      setContract(null);
+      setProvider(null);
+    }
   };
 
+  // ✅ This was missing — return and closing braces
   return (
     <AuthContext.Provider
       value={{ account, role, loading, contract, provider, connectWallet, logout }}

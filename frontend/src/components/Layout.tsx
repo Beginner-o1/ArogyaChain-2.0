@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { formatAddress } from "../utils/helpers";
@@ -18,43 +18,81 @@ export default function Layout({ children, title }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: "100vh", background: "#0a0e1a", color: "#e2e8f0", fontFamily: "Inter, sans-serif" }}>
+
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">ArogyaChain</h1>
-                <p className="text-xs text-gray-500">{title}</p>
-              </div>
+      <header style={{
+        background: "#0f1623",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+      }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 2rem", display: "flex", justifyContent: "space-between", alignItems: "center", height: "64px" }}>
+
+          {/* Brand */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div style={{
+              width: "40px", height: "40px",
+              border: "2px solid rgba(0,170,255,0.5)",
+              borderRadius: "10px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#00aaff",
+            }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-700">{formatAddress(account || "")}</p>
-                <p className="text-xs text-gray-500">Connected</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                Logout
-              </button>
+            <div>
+              <p style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 800, fontSize: "1rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "#ffffff", margin: 0 }}>
+                ArogyaChain
+              </p>
+              <p style={{ fontSize: "0.65rem", color: "#475569", letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>
+                {title}
+              </p>
             </div>
           </div>
+
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ fontSize: "0.8rem", fontWeight: 600, color: "#cbd5e1", margin: 0, fontFamily: "Courier New, monospace" }}>
+                {formatAddress(account || "")}
+              </p>
+              <p style={{ fontSize: "0.65rem", color: "#22c55e", margin: 0, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                ● Connected
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                padding: "0.4rem 1rem",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                background: "rgba(239,68,68,0.1)",
+                color: "#f87171",
+                border: "1px solid rgba(239,68,68,0.3)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                transition: "background 0.2s",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(239,68,68,0.2)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(239,68,68,0.1)")}
+            >
+              Logout
+            </button>
+          </div>
+
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main style={{ maxWidth: "1200px", margin: "0 auto", padding: "2rem" }}>
         {children}
       </main>
+
     </div>
   );
 }

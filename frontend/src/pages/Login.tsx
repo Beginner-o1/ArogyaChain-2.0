@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import "../styling/Login.css";
 
 const Login = () => {
   const { connectWallet, role, loading } = useAuth();
@@ -8,56 +9,73 @@ const Login = () => {
 
   useEffect(() => {
     if (!role) return;
-
     switch (role) {
-      case "doctor":
-        navigate("/doctor-dashboard");
-        break;
-      case "patient":
-        navigate("/patient-dashboard");
-        break;
-      case "pharmacy":
-        navigate("/pharmacy-dashboard");
-        break;
-      case "scan":
-        navigate("/scan-dashboard");
-        break;
+      case "doctor": navigate("/doctor-dashboard"); break;
+      case "patient": navigate("/patient-dashboard"); break;
+      case "pharmacy": navigate("/pharmacy-dashboard"); break;
+      case "scan": navigate("/scan-dashboard"); break;
       case "inactive-doctor":
       case "inactive-pharmacy":
       case "inactive-scan":
         alert("Your account is inactive. Contact admin.");
         break;
-      case "unregistered":
-        navigate("/signup");
-        break;
+      case "unregistered": navigate("/signup"); break;
     }
   }, [role, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md text-center">
-        <h1 className="text-3xl font-bold mb-2 text-blue-700">
-          Arogya Chain
+    <div className="login-root">
+      {/* Left hero */}
+      <div className="login-hero">
+        <div className="login-brand">
+          <div className="login-brand-icon">♥</div>
+          <div>
+            <span className="login-brand-name">ArogyaChain</span>
+            <span className="login-brand-tagline">Decentralized Health Records</span>
+          </div>
+        </div>
+
+        <h1 className="login-headline">
+          SIGN IN TO<br />THE <span>NETWORK.</span>
         </h1>
-        <p className="text-gray-600 mb-8">Decentralized Electronic Health Records</p>
+
+        <p className="login-sub">
+          Connect your MetaMask wallet to access your decentralized health records — no passwords, no central authority.
+        </p>
+
+        <ul className="login-features">
+          <li>One-time on-chain registration per wallet</li>
+          <li>Role enforced at the contract level — not the UI</li>
+          <li>Admin can deactivate providers, never patients</li>
+          <li>All actions are publicly auditable on Sepolia</li>
+        </ul>
+      </div>
+
+      {/* Right card */}
+      <div className="login-panel">
+        <p className="login-label">Authentication</p>
+        <h2 className="login-title">WELCOME<br />BACK.</h2>
+        <p className="login-description">
+          Connect your MetaMask wallet on Sepolia to sign in to your account.
+        </p>
 
         <button
           onClick={connectWallet}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+          className="login-connect-btn"
         >
+          {loading ? <span className="login-spinner" /> : "⬡"}
           {loading ? "Connecting..." : "Sign In Here"}
         </button>
 
-        <p className="mt-6 text-sm text-gray-600">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-blue-600 hover:underline font-semibold">
-            Sign Up
-          </a>
-        </p>
+        <div className="login-notice">
+          <span className="login-notice-dot" />
+          Make sure MetaMask is installed and connected to the Sepolia testnet.
+        </div>
 
-        <div className="mt-8 text-xs text-gray-500">
-          <p>Make sure MetaMask is installed and connected to Sepolia testnet</p>
+        <div className="login-footer">
+          Already registered?{" "}
+          <a href="/signup">Sign Up Here</a>
         </div>
       </div>
     </div>

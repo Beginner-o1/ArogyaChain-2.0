@@ -1,0 +1,301 @@
+/* ─── Login.css ─── */
+/* Matches the ArogyaChain dark / cyan theme shown in SignUp */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800&display=swap");
+
+/* ── Reset & root ────────────────────────────────────────── */
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  background: #0a0e1a;
+  color: #e2e8f0;
+  font-family: "Inter", sans-serif;
+  overflow: hidden;
+}
+
+/* ── Left hero panel ─────────────────────────────────────── */
+.login-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 5rem;
+  background: #0a0e1a;
+  position: relative;
+}
+
+/* Subtle grid overlay – same as signup page background */
+.login-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 174, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 174, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Brand mark */
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 4rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-brand-icon {
+  width: 48px;
+  height: 48px;
+  border: 2px solid rgba(0, 174, 255, 0.5);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00aaff;
+  font-size: 1.25rem;
+}
+
+.login-brand-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.login-brand-tagline {
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  color: #64748b;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Headline */
+.login-headline {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: clamp(3rem, 7vw, 5.5rem);
+  font-weight: 800;
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-headline span {
+  color: #00aaff;
+}
+
+/* Sub-copy */
+.login-sub {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  line-height: 1.7;
+  max-width: 360px;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Feature bullets */
+.login-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-features li {
+  font-size: 0.78rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: "Courier New", monospace;
+  letter-spacing: 0.03em;
+}
+
+.login-features li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #3b82f6;
+}
+
+.login-features li:nth-child(2)::before { background: #22c55e; }
+.login-features li:nth-child(3)::before { background: #f59e0b; }
+.login-features li:nth-child(4)::before { background: #22c55e; }
+
+/* ── Right card panel ────────────────────────────────────── */
+.login-panel {
+  width: 420px;
+  min-height: 100vh;
+  background: #0f1623;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 2.5rem;
+  position: relative;
+}
+
+/* Section label */
+.login-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+}
+
+/* Card heading */
+.login-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.0;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.login-description {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+
+/* ── Connect button ──────────────────────────────────────── */
+.login-connect-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem 1.5rem;
+  background: #00aaff;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-bottom: 2rem;
+}
+
+.login-connect-btn:hover:not(:disabled) {
+  background: #0090e0;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 170, 255, 0.35);
+}
+
+.login-connect-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.login-connect-btn:disabled {
+  background: #1e293b;
+  color: #475569;
+  cursor: not-allowed;
+}
+
+/* Loading spinner inside button */
+.login-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Status row (metamask notice) ───────────────────────── */
+.login-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 2.5rem;
+}
+
+.login-notice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* ── Footer link ─────────────────────────────────────────── */
+.login-footer {
+  font-size: 0.75rem;
+  color: #475569;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 1.5rem;
+}
+
+.login-footer a {
+  color: #00aaff;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.login-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .login-root {
+    flex-direction: column;
+  }
+
+  .login-hero {
+    padding: 2.5rem 2rem;
+    flex: unset;
+  }
+
+  .login-headline {
+    font-size: 3rem;
+  }
+
+  .login-panel {
+    width: 100%;
+    min-height: unset;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 2.5rem 1.5rem;
+  }
+}
