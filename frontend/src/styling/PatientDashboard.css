@@ -1,5 +1,4 @@
 /* ─── PatientDashboard.css ─── */
-/* Matches the ArogyaChain dark / cyan theme */
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800&display=swap");
 
@@ -28,9 +27,7 @@
 }
 
 @media (max-width: 768px) {
-  .pd-stats-grid {
-    grid-template-columns: 1fr;
-  }
+  .pd-stats-grid { grid-template-columns: 1fr; }
 }
 
 .pd-stat-card {
@@ -69,17 +66,12 @@
   flex-shrink: 0;
 }
 
-.pd-stat-icon svg {
-  width: 24px;
-  height: 24px;
-}
+.pd-stat-icon svg { width: 24px; height: 24px; }
 
-.pd-stat-icon--blue  { background: rgba(0, 170, 255, 0.12); }
-.pd-stat-icon--blue svg  { color: #00aaff; stroke: #00aaff; }
-
-.pd-stat-icon--green { background: rgba(34, 197, 94, 0.12); }
-.pd-stat-icon--green svg { color: #22c55e; stroke: #22c55e; }
-
+.pd-stat-icon--blue   { background: rgba(0, 170, 255, 0.12); }
+.pd-stat-icon--blue   svg { color: #00aaff; stroke: #00aaff; }
+.pd-stat-icon--green  { background: rgba(34, 197, 94, 0.12); }
+.pd-stat-icon--green  svg { color: #22c55e; stroke: #22c55e; }
 .pd-stat-icon--purple { background: rgba(168, 85, 247, 0.12); }
 .pd-stat-icon--purple svg { color: #a855f7; stroke: #a855f7; }
 
@@ -104,14 +96,8 @@
   color: #475569;
 }
 
-.pd-tab-btn:hover {
-  color: #94a3b8;
-}
-
-.pd-tab-btn--active {
-  border-bottom-color: #00aaff;
-  color: #00aaff;
-}
+.pd-tab-btn:hover       { color: #94a3b8; }
+.pd-tab-btn--active     { border-bottom-color: #00aaff; color: #00aaff; }
 
 /* ── Generic Card ────────────────────────────────────────── */
 .pd-card {
@@ -131,7 +117,7 @@
   margin-bottom: 1.25rem;
 }
 
-/* ── Loading state ───────────────────────────────────────── */
+/* ── Loading ─────────────────────────────────────────────── */
 .pd-loading {
   text-align: center;
   padding: 3rem 0;
@@ -148,20 +134,17 @@
   margin-bottom: 0.75rem;
 }
 
-@keyframes pd-spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes pd-spin { to { transform: rotate(360deg); } }
 
-.pd-loading p {
-  font-size: 0.8rem;
-  color: #64748b;
-}
+.pd-loading p { font-size: 0.8rem; color: #64748b; }
 
 /* ── Empty state ─────────────────────────────────────────── */
 .pd-empty {
   text-align: center;
   padding: 3rem 0;
 }
+
+.pd-empty--sm { padding: 1.5rem 0; }
 
 .pd-empty svg {
   width: 48px;
@@ -172,12 +155,10 @@
   display: block;
 }
 
-.pd-empty p {
-  font-size: 0.85rem;
-  color: #64748b;
-}
+.pd-empty--sm svg { width: 32px; height: 32px; }
+.pd-empty p { font-size: 0.85rem; color: #64748b; }
 
-/* ── Record list ─────────────────────────────────────────── */
+/* ── Records list ────────────────────────────────────────── */
 .pd-records-list {
   display: flex;
   flex-direction: column;
@@ -202,9 +183,7 @@
   align-items: flex-start;
 }
 
-.pd-record-meta {
-  flex: 1;
-}
+.pd-record-meta  { flex: 1; }
 
 .pd-record-badges {
   display: flex;
@@ -237,18 +216,11 @@
   margin-bottom: 0.25rem;
 }
 
-.pd-record-info span {
-  color: #cbd5e1;
-  font-weight: 600;
-}
+.pd-record-info span { color: #cbd5e1; font-weight: 600; }
 
-/* ── Record action buttons ───────────────────────────────── */
-.pd-record-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
+.pd-record-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
 
+/* ── Buttons ─────────────────────────────────────────────── */
 .pd-btn {
   padding: 0.35rem 0.85rem;
   font-size: 0.75rem;
@@ -261,19 +233,33 @@
   transition: opacity 0.2s, transform 0.15s;
 }
 
-.pd-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+.pd-btn:hover  { opacity: 0.85; transform: translateY(-1px); }
 .pd-btn:active { transform: translateY(0); }
 
-.pd-btn--view   { background: #00aaff; color: #ffffff; }
-.pd-btn--share  { background: #22c55e; color: #ffffff; }
-.pd-btn--delete { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-.pd-btn--grant  { background: #00aaff; color: #ffffff; }
-.pd-btn--cancel { background: rgba(255,255,255,0.07); color: #94a3b8; }
-.pd-btn--full   { width: 100%; padding: 0.75rem; font-size: 0.82rem; }
+.pd-btn--view        { background: #00aaff; color: #ffffff; }
+.pd-btn--share       { background: #22c55e; color: #ffffff; }
+.pd-btn--delete      { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.pd-btn--grant       { background: #00aaff; color: #ffffff; }
+.pd-btn--cancel      { background: rgba(255, 255, 255, 0.07); color: #94a3b8; }
+.pd-btn--full        { width: 100%; padding: 0.75rem; font-size: 0.82rem; }
 .pd-btn--blue-full   { background: #00aaff; color: #ffffff; }
 .pd-btn--purple-full { background: #a855f7; color: #ffffff; }
 
-/* ── Share / grant inline form ───────────────────────────── */
+/* Revoke — red ghost, used in View Permissions */
+.pd-btn--revoke {
+  background: rgba(239, 68, 68, 0.10);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 0.4rem 1rem;
+  flex-shrink: 0;
+}
+
+.pd-btn--revoke:hover {
+  background: rgba(239, 68, 68, 0.20);
+  opacity: 1;
+}
+
+/* ── Share inline form ───────────────────────────────────── */
 .pd-share-form {
   margin-top: 1rem;
   padding-top: 1rem;
@@ -289,12 +275,9 @@
   letter-spacing: 0.06em;
 }
 
-.pd-share-row {
-  display: flex;
-  gap: 0.5rem;
-}
+.pd-share-row { display: flex; gap: 0.5rem; }
 
-/* ── Text inputs ─────────────────────────────────────────── */
+/* ── Inputs ──────────────────────────────────────────────── */
 .pd-input {
   background: #0a0e1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -316,7 +299,7 @@
 
 .pd-input--full { width: 100%; }
 
-/* ── Permissions tab grid ────────────────────────────────── */
+/* ── Grant Permissions tab grid ──────────────────────────── */
 .pd-perms-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -338,4 +321,343 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   VIEW PERMISSIONS TAB
+═══════════════════════════════════════════════════════════ */
+
+/* Outer wrapper — stacks the two section cards vertically */
+.pd-view-perms-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Card header row — title + count badge side by side */
+.pd-vp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+/* Remove the default bottom margin from the title when it sits inside the header row */
+.pd-vp-header .pd-card-title {
+  margin-bottom: 0;
+}
+
+/* Count pill next to section title */
+.pd-vp-count {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 20px;
+  padding: 0.15rem 0.75rem;
+  border: 1px solid transparent;
+}
+
+.pd-vp-count--teal  {
+  background: rgba(79, 209, 197, 0.10);
+  color: #4fd1c5;
+  border-color: rgba(79, 209, 197, 0.2);
+}
+
+.pd-vp-count--amber {
+  background: rgba(246, 173, 85, 0.10);
+  color: #f6ad55;
+  border-color: rgba(246, 173, 85, 0.2);
+}
+
+/* List of permission rows */
+.pd-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+/* Single permission row */
+.pd-perm-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.pd-perm-item:hover {
+  border-color: rgba(0, 170, 255, 0.18);
+  background: rgba(0, 170, 255, 0.02);
+}
+
+/* Avatar circle */
+.pd-perm-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.pd-perm-avatar--teal  {
+  background: rgba(79, 209, 197, 0.10);
+  border: 1px solid rgba(79, 209, 197, 0.2);
+}
+
+.pd-perm-avatar--amber {
+  background: rgba(246, 173, 85, 0.10);
+  border: 1px solid rgba(246, 173, 85, 0.2);
+}
+
+/* Text info */
+.pd-perm-info   { flex: 1; min-width: 0; }
+
+.pd-perm-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-perm-detail {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.15rem;
+}
+
+.pd-perm-addr {
+  font-size: 0.72rem;
+  color: #475569;
+  font-family: "Courier New", monospace;
+}
+
+/* Clickable row modifier */
+.pd-perm-item--clickable {
+  cursor: pointer;
+}
+
+.pd-perm-item--clickable:hover {
+  border-color: rgba(0, 170, 255, 0.3);
+  background: rgba(0, 170, 255, 0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   DETAIL SLIDE-IN PANEL
+═══════════════════════════════════════════════════════════ */
+
+/* Full-viewport overlay wrapper — pointer-events off until open */
+.pd-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.pd-detail-overlay--open {
+  pointer-events: all;
+}
+
+/* Dimmed backdrop */
+.pd-detail-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 10, 20, 0.60);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pd-detail-overlay--open .pd-detail-backdrop {
+  opacity: 1;
+}
+
+/* Panel itself — slides in from the right */
+.pd-detail-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 380px;
+  max-width: 95vw;
+  background: #0b1120;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.36s cubic-bezier(.22, 1, .36, 1);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Top accent line */
+.pd-detail-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 10%, #00aaff 50%, transparent 90%);
+  opacity: 0.35;
+}
+
+.pd-detail-overlay--open .pd-detail-panel {
+  transform: translateX(0);
+}
+
+/* Close button */
+.pd-detail-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+  z-index: 1;
+}
+
+.pd-detail-close:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Header — avatar + name */
+.pd-detail-header {
+  padding: 36px 28px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.pd-detail-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.pd-detail-avatar--teal {
+  background: rgba(79, 209, 197, 0.12);
+  border: 1px solid rgba(79, 209, 197, 0.25);
+}
+
+.pd-detail-avatar--amber {
+  background: rgba(246, 173, 85, 0.12);
+  border: 1px solid rgba(246, 173, 85, 0.25);
+}
+
+.pd-detail-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.pd-detail-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+}
+
+/* Scrollable body with fields */
+.pd-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.pd-detail-body::-webkit-scrollbar       { width: 3px; }
+.pd-detail-body::-webkit-scrollbar-track { background: transparent; }
+.pd-detail-body::-webkit-scrollbar-thumb { background: rgba(0, 170, 255, 0.2); border-radius: 2px; }
+
+/* Individual field row */
+.pd-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pd-detail-field:last-child {
+  border-bottom: none;
+}
+
+.pd-detail-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #475569;
+}
+
+.pd-detail-value {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.pd-detail-value--mono {
+  font-family: "Courier New", monospace;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.pd-detail-value--green {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+/* Footer with action buttons */
+.pd-detail-footer {
+  padding: 20px 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Full-width solid revoke button for the panel footer */
+.pd-btn--revoke-full {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.pd-btn--revoke-full:hover {
+  background: rgba(239, 68, 68, 0.22);
+  opacity: 1;
 }

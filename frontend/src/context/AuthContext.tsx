@@ -6,11 +6,8 @@ import { CONTRACT_ADDRESS } from "../config";
 export type Role =
   | "patient"
   | "doctor"
-  | "inactive-doctor"
   | "pharmacy"
-  | "inactive-pharmacy"
   | "scan"
-  | "inactive-scan"
   | "unregistered"
   | null;
 
@@ -18,6 +15,7 @@ interface AuthContextType {
   account: string | null;
   role: Role;
   loading: boolean;
+  isAdmin: boolean;
   contract: ethers.Contract | null;
   provider: ethers.BrowserProvider | null;
   connectWallet: () => Promise<void>;
@@ -29,9 +27,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [account, setAccount] = useState<string | null>(null);
-  const [role, setRole] = useState<Role>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [account,  setAccount]  = useState<string | null>(null);
+  const [role,     setRole]     = useState<Role>(null);
+  const [loading,  setLoading]  = useState<boolean>(false);
+  const [isAdmin,  setIsAdmin]  = useState<boolean>(false);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
 
@@ -48,22 +47,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           contract.isScanCenter(addr),
         ]);
 
-      if (isPatient) return "patient";
-
-      if (isDoctor) {
-        const active = await contract.isDoctorActive(addr);
-        return active ? "doctor" : "inactive-doctor";
-      }
-
-      if (isPharmacy) {
-        const active = await contract.isPharmacyActive(addr);
-        return active ? "pharmacy" : "inactive-pharmacy";
-      }
-
-      if (isScanCenter) {
-        const active = await contract.isScanCenterActive(addr);
-        return active ? "scan" : "inactive-scan";
-      }
+      if (isPatient)    return "patient";
+      if (isDoctor)     return "doctor";
+      if (isPharmacy)   return "pharmacy";
+      if (isScanCenter) return "scan";
 
       return "unregistered";
     } catch (error) {
@@ -83,8 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const browserProvider = new ethers.BrowserProvider(window.ethereum);
       const signer = await browserProvider.getSigner();
-
       const address = await signer.getAddress();
+
       setAccount(address);
       setProvider(browserProvider);
 
@@ -95,8 +82,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
       setContract(contractInstance);
 
-      const detectedRole = await detectRole(address, contractInstance);
+      const [detectedRole, adminAddress] = await Promise.all([
+        detectRole(address, contractInstance),
+        contractInstance.admin(),
+      ]);
+
       setRole(detectedRole);
+      setIsAdmin(address.toLowerCase() === adminAddress.toLowerCase());
     } catch (error) {
       console.error("Wallet connection failed:", error);
     } finally {
@@ -117,15 +109,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setAccount(null);
       setRole(null);
+      setIsAdmin(false);
       setContract(null);
       setProvider(null);
     }
   };
 
-  // ✅ This was missing — return and closing braces
   return (
     <AuthContext.Provider
-      value={{ account, role, loading, contract, provider, connectWallet, logout }}
+      value={{ account, role, loading, isAdmin, contract, provider, connectWallet, logout }}
     >
       {children}
     </AuthContext.Provider>

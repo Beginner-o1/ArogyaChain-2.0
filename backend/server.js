@@ -2,6 +2,8 @@ const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
 const crypto = require("crypto");
+const FormData = require("form-data");
+const axios = require("axios");
 require("dotenv").config();
 
 const app = express();
@@ -28,21 +30,42 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             .update(fileBuffer)
             .digest("hex");
 
-        // TODO: Add IPFS upload here
-        // For now, returning mock CID
-        const mockCID = `Qm${hash.substring(0, 44)}`;
+        // Upload to Pinata
+        const formData = new FormData();
+        formData.append("file", fileBuffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+        });
+        formData.append("pinataMetadata", JSON.stringify({
+            name: req.file.originalname,
+        }));
+
+        const pinataRes = await axios.post(
+            "https://api.pinata.cloud/pinning/pinFileToIPFS",
+            formData,
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.PINATA_JWT}`,
+                    ...formData.getHeaders(),
+                },
+                maxBodyLength: Infinity,
+            }
+        );
+
+        const cid = pinataRes.data.IpfsHash;
 
         res.json({
             success: true,
-            message: "File received",
+            message: "File pinned to IPFS",
             hash: `0x${hash}`,
-            cid: mockCID,
+            cid,
+            url: `https://gateway.pinata.cloud/ipfs/${cid}`,
             filename: req.file.originalname,
-            size: req.file.size
+            size: req.file.size,
         });
     } catch (error) {
-        console.error("Upload error:", error);
-        res.status(500).json({ error: "Upload failed", details: error.message });
+        console.error("Upload error:", error?.response?.data || error.message);
+        res.status(500).json({ error: "Upload failed", details: error?.response?.data || error.message });
     }
 });
 

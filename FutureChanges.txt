@@ -1,0 +1,6 @@
+enter doctor name into medical report
+emergency to entire patient records 
+create about patient file 
+implement qr scanning
+tokenomics
+convert record id to hashes

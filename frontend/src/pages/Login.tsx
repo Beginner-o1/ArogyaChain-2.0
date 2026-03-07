@@ -4,24 +4,20 @@ import { useAuth } from "../context/AuthContext";
 import "../styling/Login.css";
 
 const Login = () => {
-  const { connectWallet, role, loading } = useAuth();
+  const { connectWallet, role, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!role) return;
+    if (isAdmin) { navigate("/admin"); return; }
     switch (role) {
-      case "doctor": navigate("/doctor-dashboard"); break;
-      case "patient": navigate("/patient-dashboard"); break;
-      case "pharmacy": navigate("/pharmacy-dashboard"); break;
-      case "scan": navigate("/scan-dashboard"); break;
-      case "inactive-doctor":
-      case "inactive-pharmacy":
-      case "inactive-scan":
-        alert("Your account is inactive. Contact admin.");
-        break;
-      case "unregistered": navigate("/signup"); break;
+      case "doctor":       navigate("/doctor-dashboard");   break;
+      case "patient":      navigate("/patient-dashboard");  break;
+      case "pharmacy":     navigate("/pharmacy-dashboard"); break;
+      case "scan":         navigate("/scan-dashboard");     break;
+      case "unregistered": navigate("/signup");             break;
     }
-  }, [role, navigate]);
+  }, [role, isAdmin, navigate]);
 
   return (
     <div className="login-root">
@@ -40,7 +36,8 @@ const Login = () => {
         </h1>
 
         <p className="login-sub">
-          Connect your MetaMask wallet to access your decentralized health records — no passwords, no central authority.
+          Connect your MetaMask wallet to access your decentralized health
+          records — no passwords, no central authority.
         </p>
 
         <ul className="login-features">
@@ -74,7 +71,7 @@ const Login = () => {
         </div>
 
         <div className="login-footer">
-          Already registered?{" "}
+          Not registered yet?{" "}
           <a href="/signup">Sign Up Here</a>
         </div>
       </div>
