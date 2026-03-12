@@ -1,0 +1,253 @@
+/* ── Overlay ── */
+.qr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(3px);
+  z-index: 300;
+  animation: qrFadeIn 0.2s ease;
+}
+
+@keyframes qrFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal ── */
+.qr-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 301;
+  width: 340px;
+  background: #13161e;
+  border: 1px solid #1e2433;
+  border-radius: 12px;
+  overflow: hidden;
+  animation: qrSlideUp 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+}
+
+@keyframes qrSlideUp {
+  from { transform: translate(-50%, -46%); opacity: 0; }
+  to   { transform: translate(-50%, -50%); opacity: 1; }
+}
+
+/* ── Header ── */
+.qr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #0d0f14;
+  border-bottom: 1px solid #1e2433;
+}
+
+.qr-modal-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+}
+
+.qr-modal-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  background: #1e2433;
+  border: 1px solid #252d3f;
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.qr-modal-close:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+/* ── Body ── */
+.qr-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.qr-modal-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a5568;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+/* ── Viewport ── */
+.qr-viewport {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0d0f14;
+}
+
+.qr-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Override html5-qrcode default styles */
+.qr-container video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 8px;
+}
+
+.qr-container img { display: none !important; }
+
+/* ── Corner brackets ── */
+.qr-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-color: #3b82f6;
+  border-style: solid;
+  z-index: 2;
+}
+
+.qr-corner--tl { top: 12px;  left: 12px;  border-width: 2px 0 0 2px; border-radius: 2px 0 0 0; }
+.qr-corner--tr { top: 12px;  right: 12px; border-width: 2px 2px 0 0; border-radius: 0 2px 0 0; }
+.qr-corner--bl { bottom: 12px; left: 12px;  border-width: 0 0 2px 2px; border-radius: 0 0 0 2px; }
+.qr-corner--br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; border-radius: 0 0 2px 0; }
+
+/* ── Scan line ── */
+.qr-scan-line {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+  z-index: 2;
+  animation: scanMove 2s ease-in-out infinite;
+  top: 12px;
+}
+
+@keyframes scanMove {
+  0%   { top: 12px;  opacity: 1; }
+  50%  { top: calc(100% - 12px); opacity: 1; }
+  100% { top: 12px;  opacity: 1; }
+}
+
+/* ── Loading ── */
+.qr-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a5568;
+}
+
+.qr-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #1e2433;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: qrSpin 0.7s linear infinite;
+}
+
+@keyframes qrSpin { to { transform: rotate(360deg); } }
+
+/* ── Error ── */
+.qr-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 5px;
+  padding: 9px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #ef4444;
+  width: 100%;
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* ── Footer ── */
+.qr-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid #1e2433;
+  background: #0d0f14;
+}
+
+.qr-cancel-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid #252d3f;
+  color: #94a3b8;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.qr-cancel-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* ── QR Scan button (used inline next to inputs) ── */
+.qr-scan-btn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  background: #1e2433;
+  border: 1px solid #252d3f;
+  border-radius: 5px;
+  color: #3b82f6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-size: 16px;
+}
+
+.qr-scan-btn:hover {
+  background: rgba(59,130,246,0.12);
+  border-color: #3b82f6;
+}
+
+/* ── Input with QR button wrapper ── */
+.qr-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.qr-input-row .pd-input,
+.qr-input-row .pd-input--full {
+  flex: 1;
+  min-width: 0;
+}

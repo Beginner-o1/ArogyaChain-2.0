@@ -4,7 +4,6 @@ pragma solidity ^0.8.28;
 contract DecentralizedEHR {
 
     address public admin;
-    uint256 private recordCounter;
     uint256 public constant EMERGENCY_DURATION = 1 hours;
 
     constructor() {
@@ -19,13 +18,14 @@ contract DecentralizedEHR {
         E04  Not a pharmacy
         E05  Not a scan center
         E06  Already registered
-        E07  Required field empty (name / license / location / title)
+        E07  Required field empty
         E08  Invalid patient
         E09  Upload not permitted
         E10  Not record owner
         E11  Record deleted
         E12  Access denied
         E13  No prescription on this record
+        E14  No health profile found
     ============================================================= */
 
     /* =============================================================
@@ -67,24 +67,24 @@ contract DecentralizedEHR {
     ============================================================= */
 
     struct DoctorProfile {
-        string fullName;        // e.g. "Dr. Sarah Mitchell"
-        string licenseNumber;   // e.g. "MCI-2024-78432"
-        string contactEmail;    // e.g. "sarah@apollo.com"
+        string fullName;
+        string licenseNumber;
+        string contactEmail;
     }
 
     struct PharmacyProfile {
-        string pharmacyName;    // e.g. "MedPlus Pharmacy"
-        string licenseNumber;   // e.g. "PH-TN-2024-00321"
-        string location;        // e.g. "Chennai, Tamil Nadu"
-        string contactEmail;    // e.g. "medplus@example.com"
-        string contactPhone;    // e.g. "+91-9876543210"
+        string pharmacyName;
+        string licenseNumber;
+        string location;
+        string contactEmail;
+        string contactPhone;
     }
 
     struct ScanCenterProfile {
-        string centerName;      // e.g. "ClearView Radiology"
-        string licenseNumber;   // e.g. "SC-KA-2024-11245"
-        string location;        // e.g. "Bangalore, Karnataka"
-        string contactEmail;    // e.g. "info@clearview.com"
+        string centerName;
+        string licenseNumber;
+        string location;
+        string contactEmail;
         string contactPhone;
     }
 
@@ -111,7 +111,6 @@ contract DecentralizedEHR {
         require(bytes(licenseNumber).length > 0, "E07");
 
         isDoctor[msg.sender] = true;
-
         doctorProfiles[msg.sender] = DoctorProfile({
             fullName:      fullName,
             licenseNumber: licenseNumber,
@@ -132,7 +131,6 @@ contract DecentralizedEHR {
         require(bytes(location).length > 0,      "E07");
 
         isPharmacy[msg.sender] = true;
-
         pharmacyProfiles[msg.sender] = PharmacyProfile({
             pharmacyName:  pharmacyName,
             licenseNumber: licenseNumber,
@@ -154,7 +152,6 @@ contract DecentralizedEHR {
         require(bytes(licenseNumber).length > 0,  "E07");
 
         isScanCenter[msg.sender] = true;
-
         scanCenterProfiles[msg.sender] = ScanCenterProfile({
             centerName:    centerName,
             licenseNumber: licenseNumber,
@@ -168,9 +165,11 @@ contract DecentralizedEHR {
                        PROFILE VIEW FUNCTIONS
     ============================================================= */
 
+    // Callable only by patients and admin
     function getDoctorProfile(address doctor)
         external view returns (DoctorProfile memory)
     {
+        require(isPatient[msg.sender] || msg.sender == admin, "E12");
         require(isDoctor[doctor], "E03");
         return doctorProfiles[doctor];
     }
@@ -189,21 +188,25 @@ contract DecentralizedEHR {
         return scanCenterProfiles[scan];
     }
 
+    // Doctors can retrieve their own profile
     function getMyDoctorProfile()
         external view returns (DoctorProfile memory)
     {
+        require(isDoctor[msg.sender], "E03");
         return doctorProfiles[msg.sender];
     }
 
     function getMyPharmacyProfile()
         external view returns (PharmacyProfile memory)
     {
+        require(isPharmacy[msg.sender], "E04");
         return pharmacyProfiles[msg.sender];
     }
 
     function getMyScanCenterProfile()
         external view returns (ScanCenterProfile memory)
     {
+        require(isScanCenter[msg.sender], "E05");
         return scanCenterProfiles[msg.sender];
     }
 
@@ -310,29 +313,31 @@ contract DecentralizedEHR {
     enum RecordType   { MEDICAL, SCAN }
 
     struct MedicalRecord {
-        uint256 id;
-        address patient;
-        address uploader;
+        bytes32      id;
+        address      patient;
+        address      uploader;
         UploaderRole uploaderRole;
-        RecordType recordType;
-        string title;
-        string recordCID;
-        bytes32 recordHash;
-        string prescriptionCID;
-        uint256 timestamp;
-        bool isDeleted;
+        RecordType   recordType;
+        string       title;
+        string       recordCID;
+        bytes32      recordHash;
+        string       prescriptionCID;
+        uint256      timestamp;
+        bool         isDeleted;
     }
 
-    mapping(uint256 => MedicalRecord) private records;
-    mapping(address => uint256[])     private patientRecords;
+    mapping(bytes32 => MedicalRecord) private records;
+    mapping(address => bytes32[])     private patientRecords;
 
     /* =============================================================
                         ACCESS PERMISSIONS
     ============================================================= */
 
-    mapping(uint256 => mapping(address => bool))    private recordAccess;
-    mapping(uint256 => mapping(address => bool))    private prescriptionAccess;
-    mapping(uint256 => mapping(address => uint256)) private emergencyAccess;
+    mapping(bytes32 => mapping(address => bool))    private recordAccess;
+    mapping(bytes32 => mapping(address => bool))    private prescriptionAccess;
+
+    // Patient-level emergency access: emergencyAccess[patient][doctor] = expiry
+    mapping(address => mapping(address => uint256)) private emergencyAccess;
 
     mapping(address => address[])                private patientActiveDoctors;
     mapping(address => mapping(address => bool)) private patientDoctorHasAccess;
@@ -341,8 +346,8 @@ contract DecentralizedEHR {
                                 EVENTS
     ============================================================= */
 
-    event RecordAdded(uint256 recordId, address patient, address uploader);
-    event EmergencyAccessActivated(uint256 recordId, address doctor, uint256 expiry);
+    event RecordAdded(bytes32 indexed recordId, address indexed patient, address indexed uploader);
+    event EmergencyAccessActivated(address indexed patient, address indexed doctor, uint256 expiry);
 
     /* =============================================================
                             ADD RECORD
@@ -355,14 +360,21 @@ contract DecentralizedEHR {
         bytes32 hash,
         string memory prescriptionCID
     ) external onlyActiveDoctor {
-        require(isPatient[patient], "E08");
+        require(isPatient[patient],                          "E08");
         require(doctorUploadPermission[patient][msg.sender], "E09");
-        require(bytes(title).length > 0, "E07");
+        require(bytes(title).length > 0,                     "E07");
 
-        recordCounter++;
+        // Generate unique ID using nonce (current record count for patient)
+        bytes32 recordId = keccak256(abi.encodePacked(
+            patient,
+            msg.sender,
+            cid,
+            block.timestamp,
+            patientRecords[patient].length  // nonce — guarantees uniqueness
+        ));
 
-        records[recordCounter] = MedicalRecord({
-            id:              recordCounter,
+        records[recordId] = MedicalRecord({
+            id:              recordId,
             patient:         patient,
             uploader:        msg.sender,
             uploaderRole:    UploaderRole.DOCTOR,
@@ -375,12 +387,12 @@ contract DecentralizedEHR {
             isDeleted:       false
         });
 
-        patientRecords[patient].push(recordCounter);
-        recordAccess[recordCounter][patient]    = true;
-        recordAccess[recordCounter][msg.sender] = true;
+        patientRecords[patient].push(recordId);
+        recordAccess[recordId][patient]    = true;
+        recordAccess[recordId][msg.sender] = true;
         _addDoctorToPatientList(patient, msg.sender);
 
-        emit RecordAdded(recordCounter, patient, msg.sender);
+        emit RecordAdded(recordId, patient, msg.sender);
     }
 
     function addScanRecord(
@@ -389,14 +401,20 @@ contract DecentralizedEHR {
         string memory cid,
         bytes32 hash
     ) external onlyActiveScanCenter {
-        require(isPatient[patient], "E08");
+        require(isPatient[patient],                        "E08");
         require(scanUploadPermission[patient][msg.sender], "E09");
-        require(bytes(title).length > 0, "E07");
+        require(bytes(title).length > 0,                   "E07");
 
-        recordCounter++;
+        bytes32 recordId = keccak256(abi.encodePacked(
+            patient,
+            msg.sender,
+            cid,
+            block.timestamp,
+            patientRecords[patient].length  // nonce
+        ));
 
-        records[recordCounter] = MedicalRecord({
-            id:              recordCounter,
+        records[recordId] = MedicalRecord({
+            id:              recordId,
             patient:         patient,
             uploader:        msg.sender,
             uploaderRole:    UploaderRole.SCAN_CENTER,
@@ -409,41 +427,41 @@ contract DecentralizedEHR {
             isDeleted:       false
         });
 
-        patientRecords[patient].push(recordCounter);
-        recordAccess[recordCounter][patient]    = true;
-        recordAccess[recordCounter][msg.sender] = true;
+        patientRecords[patient].push(recordId);
+        recordAccess[recordId][patient]    = true;
+        recordAccess[recordId][msg.sender] = true;
 
-        emit RecordAdded(recordCounter, patient, msg.sender);
+        emit RecordAdded(recordId, patient, msg.sender);
     }
 
     /* =============================================================
                         GRANT / REVOKE RECORD ACCESS
     ============================================================= */
 
-    function grantRecordAccess(uint256 recordId, address doctor) external onlyPatient {
+    function grantRecordAccess(bytes32 recordId, address doctor) external onlyPatient {
         MedicalRecord storage record = records[recordId];
         require(record.patient == msg.sender, "E10");
-        require(!record.isDeleted, "E11");
-        require(isDoctor[doctor], "E03");
+        require(!record.isDeleted,            "E11");
+        require(isDoctor[doctor],             "E03");
 
         recordAccess[recordId][doctor] = true;
         _addDoctorToPatientList(msg.sender, doctor);
     }
 
-    function revokeRecordAccess(uint256 recordId, address doctor) external onlyPatient {
+    function revokeRecordAccess(bytes32 recordId, address doctor) external onlyPatient {
         MedicalRecord storage record = records[recordId];
         require(record.patient == msg.sender, "E10");
         recordAccess[recordId][doctor] = false;
     }
 
-    function grantPrescriptionAccess(uint256 recordId, address pharmacy) external onlyPatient {
+    function grantPrescriptionAccess(bytes32 recordId, address pharmacy) external onlyPatient {
         MedicalRecord storage record = records[recordId];
         require(record.patient == msg.sender, "E10");
-        require(isPharmacy[pharmacy], "E04");
+        require(isPharmacy[pharmacy],         "E04");
         prescriptionAccess[recordId][pharmacy] = true;
     }
 
-    function revokePrescriptionAccess(uint256 recordId, address pharmacy) external onlyPatient {
+    function revokePrescriptionAccess(bytes32 recordId, address pharmacy) external onlyPatient {
         MedicalRecord storage record = records[recordId];
         require(record.patient == msg.sender, "E10");
         prescriptionAccess[recordId][pharmacy] = false;
@@ -453,43 +471,49 @@ contract DecentralizedEHR {
                           EMERGENCY ACCESS
     ============================================================= */
 
-    function activateEmergencyAccess(uint256 recordId) external onlyActiveDoctor {
-        MedicalRecord storage record = records[recordId];
-        require(!record.isDeleted, "E11");
+    // Doctor requests emergency access to ALL records of a patient for 1 hour
+    function activateEmergencyAccess(address patient) external onlyActiveDoctor {
+        require(isPatient[patient], "E08");
 
         uint256 expiry = block.timestamp + EMERGENCY_DURATION;
-        emergencyAccess[recordId][msg.sender] = expiry;
+        emergencyAccess[patient][msg.sender] = expiry;
 
-        emit EmergencyAccessActivated(recordId, msg.sender, expiry);
+        emit EmergencyAccessActivated(patient, msg.sender, expiry);
+    }
+
+    function hasEmergencyAccess(address patient, address doctor)
+        external view returns (bool)
+    {
+        return emergencyAccess[patient][doctor] >= block.timestamp;
     }
 
     /* =============================================================
                             VIEW FUNCTIONS
     ============================================================= */
 
-    function viewRecord(uint256 recordId) external view returns (MedicalRecord memory) {
+    function viewRecord(bytes32 recordId) external view returns (MedicalRecord memory) {
         MedicalRecord memory record = records[recordId];
         require(!record.isDeleted, "E11");
 
         bool hasNormalAccess    = recordAccess[recordId][msg.sender];
-        bool hasEmergencyAccess = emergencyAccess[recordId][msg.sender] >= block.timestamp;
+        bool hasEmergency       = emergencyAccess[record.patient][msg.sender] >= block.timestamp;
 
         require(
             msg.sender == record.patient ||
             hasNormalAccess ||
-            hasEmergencyAccess,
+            hasEmergency,
             "E12"
         );
 
         return record;
     }
 
-    function viewPrescription(uint256 recordId) external view returns (string memory) {
+    function viewPrescription(bytes32 recordId) external view returns (string memory) {
         MedicalRecord storage record = records[recordId];
-        require(!record.isDeleted, "E11");
+        require(!record.isDeleted,                        "E11");
         require(bytes(record.prescriptionCID).length > 0, "E13");
 
-        bool isOwner          = msg.sender == record.patient;
+        bool isOwner           = msg.sender == record.patient;
         bool isGrantedPharmacy = isPharmacy[msg.sender]
                                   && prescriptionAccess[recordId][msg.sender];
 
@@ -498,7 +522,7 @@ contract DecentralizedEHR {
         return record.prescriptionCID;
     }
 
-    function getMyRecords() external view onlyPatient returns (uint256[] memory) {
+    function getMyRecords() external view onlyPatient returns (bytes32[] memory) {
         return patientRecords[msg.sender];
     }
 
@@ -510,10 +534,46 @@ contract DecentralizedEHR {
                             DELETE RECORD
     ============================================================= */
 
-    function deleteRecord(uint256 recordId) external onlyPatient {
+    function deleteRecord(bytes32 recordId) external onlyPatient {
         MedicalRecord storage record = records[recordId];
         require(record.patient == msg.sender, "E10");
         record.isDeleted = true;
+    }
+
+    /* =============================================================
+                        PATIENT HEALTH PROFILE
+    ============================================================= */
+
+    // Stores one profile PDF per patient (CID + hash). Overwritten on update.
+    mapping(address => string)  private patientProfileCID;
+    mapping(address => bytes32) private patientProfileHash;
+
+    event PatientProfileUpdated(address indexed patient, string cid);
+
+    // Patient uploads or replaces their health profile PDF
+    function uploadPatientProfile(string calldata cid, bytes32 hash)
+        external onlyPatient
+    {
+        require(bytes(cid).length > 0, "E07");
+        patientProfileCID[msg.sender]  = cid;
+        patientProfileHash[msg.sender] = hash;
+        emit PatientProfileUpdated(msg.sender, cid);
+    }
+
+    // Patient retrieves their own profile CID
+    function getMyProfileCID() external view onlyPatient returns (string memory, bytes32) {
+        require(bytes(patientProfileCID[msg.sender]).length > 0, "E14");
+        return (patientProfileCID[msg.sender], patientProfileHash[msg.sender]);
+    }
+
+    // Doctor can view a patient's profile CID only if emergency access is active
+    function getPatientProfileCID(address patient)
+        external view returns (string memory, bytes32)
+    {
+        require(isDoctor[msg.sender],                                       "E03");
+        require(emergencyAccess[patient][msg.sender] >= block.timestamp,    "E12");
+        require(bytes(patientProfileCID[patient]).length > 0,               "E14");
+        return (patientProfileCID[patient], patientProfileHash[patient]);
     }
 
     /* =============================================================

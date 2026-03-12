@@ -8,12 +8,16 @@ import "../styling/DoctorDashboard.css";
 export default function DoctorDashboard() {
   const { contract, account } = useAuth();
 
-  const [drawerOpen,       setDrawerOpen]       = useState(false);
-  const [recordId,         setRecordId]         = useState("");
-  const [viewingRecord,    setViewingRecord]    = useState<any>(null);
-  const [viewLoading,      setViewLoading]      = useState(false);
-  const [emergencyId,      setEmergencyId]      = useState("");
-  const [emergencyLoading, setEmergencyLoading] = useState(false);
+  const [drawerOpen,         setDrawerOpen]         = useState(false);
+  const [recordId,           setRecordId]           = useState("");
+  const [viewingRecord,      setViewingRecord]      = useState<any>(null);
+  const [viewLoading,        setViewLoading]        = useState(false);
+  const [emergencyId,        setEmergencyId]        = useState("");
+  const [emergencyLoading,   setEmergencyLoading]   = useState(false);
+  const [emergencyResult,    setEmergencyResult]    = useState<{
+    patientAddress: string;
+    profileCID: string | null;
+  } | null>(null);
 
   const handleViewRecord = async () => {
     if (!contract || !recordId.trim()) return;
@@ -40,9 +44,21 @@ export default function DoctorDashboard() {
     if (!contract || !emergencyId.trim()) return;
     try {
       setEmergencyLoading(true);
+      setEmergencyResult(null);
+
       const tx = await contract.activateEmergencyAccess(emergencyId);
       await tx.wait();
-      alert("Emergency access activated for 1 hour!");
+
+      const patientAddress = emergencyId.trim();
+
+      // Fetch patient health profile — may not exist (E14)
+      let profileCID: string | null = null;
+      try {
+        const [cid] = await contract.getPatientProfileCID(patientAddress);
+        profileCID = cid || null;
+      } catch { /* no profile uploaded */ }
+
+      setEmergencyResult({ patientAddress, profileCID });
       setEmergencyId("");
     } catch (error) {
       alert(handleError(error));
@@ -166,15 +182,16 @@ export default function DoctorDashboard() {
           <div className="dd-card">
             <div className="dd-card-title">Emergency Access</div>
             <div className="dd-card-desc" style={{ marginBottom: 16 }}>
-              Activate temporary access to a patient record without prior permission.
-              Expires after <strong>1 hour</strong> and is permanently logged on-chain.
+              Activate temporary access to <strong>all records</strong> and the{" "}
+              <strong>health profile</strong> of a patient. Expires after{" "}
+              <strong>1 hour</strong> and is permanently logged on-chain.
             </div>
             <div className="dd-field">
-              <label className="dd-label">Record ID</label>
+              <label className="dd-label">Patient Wallet Address</label>
               <input
                 className="dd-input"
                 type="text"
-                placeholder="e.g. 42"
+                placeholder="0x..."
                 value={emergencyId}
                 onChange={(e) => setEmergencyId(e.target.value)}
               />
@@ -189,6 +206,53 @@ export default function DoctorDashboard() {
                 : "Activate Emergency Access"
               }
             </button>
+
+            {/* ── Emergency Result ── */}
+            {emergencyResult && (
+              <div className="dd-emergency-result">
+                <div className="dd-emergency-result-header">
+                  <span className="dd-emergency-badge">⚡ Emergency Access Active — 1 Hour</span>
+                  <span className="dd-emergency-patient">
+                    Patient: {shortAddr(emergencyResult.patientAddress)}
+                  </span>
+                </div>
+
+                {/* Patient Health Profile */}
+                <div className="dd-emergency-section">
+                  <p className="dd-emergency-section-label">Health Profile</p>
+                  {emergencyResult.profileCID ? (
+                    <a
+                      href={`https://gateway.pinata.cloud/ipfs/${emergencyResult.profileCID}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="dd-btn dd-btn--view dd-btn--sm"
+                    >
+                      📋 Open Patient Health Profile ↗
+                    </a>
+                  ) : (
+                    <p className="dd-emergency-none">No health profile uploaded by this patient.</p>
+                  )}
+                </div>
+
+                {/* Records access note */}
+                <div className="dd-emergency-section">
+                  <p className="dd-emergency-section-label">Medical Records</p>
+                  <p className="dd-emergency-note">
+                    You now have emergency access to all records for this patient.
+                    Use the <strong>View Record</strong> section above with any record ID
+                    to retrieve individual records for the next hour.
+                  </p>
+                </div>
+
+                <button
+                  className="dd-btn dd-btn--ghost dd-btn--sm"
+                  onClick={() => setEmergencyResult(null)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
             <div className="dd-warning">
               <span className="dd-warning-icon">⚠</span>
               Only use in critical situations. All activations are publicly auditable.

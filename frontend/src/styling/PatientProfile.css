@@ -1,0 +1,248 @@
+/* ── Centered states (processing / success) ── */
+.pp-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 260px;
+  text-align: center;
+}
+
+.pp-spinner-lg {
+  width: 36px !important;
+  height: 36px !important;
+  border-width: 3px !important;
+}
+
+.pp-process-msg {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+/* ── Success ── */
+.pp-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #22c55e;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pp-success-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.05em;
+}
+
+.pp-success-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+.pp-btn-wide {
+  width: 220px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* ── Existing profile card ── */
+.pp-existing {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  background: #0d0f14;
+  border: 1px solid #1e2433;
+  border-radius: 8px;
+  padding: 18px 20px;
+  flex-wrap: wrap;
+}
+
+.pp-existing-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+}
+
+.pp-existing-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pp-existing-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #e2e8f0;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+.pp-existing-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+  line-height: 1.6;
+  max-width: 420px;
+}
+
+.pp-existing-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* ── Empty state ── */
+.pp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 12px;
+}
+
+.pp-empty-icon {
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+.pp-empty-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.pp-empty-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+  max-width: 380px;
+  line-height: 1.7;
+}
+
+.pp-btn-create {
+  margin-top: 8px;
+  width: 220px;
+}
+
+/* ── Form ── */
+.pp-form-header {
+  margin-bottom: 20px;
+}
+
+.pp-form-note {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #475569;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+.pp-form-note strong {
+  color: #94a3b8;
+}
+
+.pp-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.pp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pp-section-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #3b82f6;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1e2433;
+}
+
+.pp-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pp-field--full {
+  grid-column: 1 / -1;
+}
+
+.pp-field label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pp-required {
+  color: #ef4444;
+}
+
+.pp-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.6;
+}
+
+/* Date input dark styling */
+.pd-input[type="date"] {
+  color-scheme: dark;
+  color: #e2e8f0;
+}
+.pd-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(1) saturate(3) hue-rotate(180deg);
+}
+
+/* Select dark styling */
+.pd-input option {
+  background: #13161e;
+  color: #e2e8f0;
+}
+
+/* ── Form actions ── */
+.pp-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid #1e2433;
+}
+
+.pp-submit-btn {
+  min-width: 200px;
+}

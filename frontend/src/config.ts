@@ -1,2 +1,2 @@
-export const CONTRACT_ADDRESS = "0x8F95E03568D002380504aE0D12346A3c1B23650C";
+export const CONTRACT_ADDRESS = "0xd0badceb75fdf2ecbd18235ea879b1aaf20eee25";
 export const BACKEND_URL = "http://localhost:5000";
