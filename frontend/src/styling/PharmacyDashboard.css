@@ -1,0 +1,415 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+.phd-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 4px 0;
+  animation: phdFadeUp 0.3s ease;
+}
+
+@keyframes phdFadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Stat Cards ── */
+.phd-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.phd-stat {
+  background: #13161e;
+  border: 1px solid #1e2433;
+  border-radius: 8px;
+  padding: 20px 20px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.phd-stat:hover {
+  border-color: #252d3f;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.phd-stat-accent {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: 8px 8px 0 0;
+}
+
+.phd-stat--amber .phd-stat-accent { background: #f59e0b; }
+.phd-stat--green .phd-stat-accent { background: #22c55e; }
+.phd-stat--blue  .phd-stat-accent { background: #3b82f6; }
+
+.phd-stat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #4a5568;
+  margin-bottom: 8px;
+}
+
+.phd-stat-value {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.phd-stat-value--green  { color: #22c55e; }
+.phd-stat-value--amber  { color: #f59e0b; }
+
+.phd-stat-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #2d3748;
+  letter-spacing: 0.04em;
+}
+
+/* ── Cards ── */
+.phd-card {
+  background: #13161e;
+  border: 1px solid #1e2433;
+  border-radius: 8px;
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+}
+
+.phd-card:hover { border-color: #252d3f; }
+
+.phd-card-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+}
+
+.phd-card-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a5568;
+  line-height: 1.65;
+  margin-bottom: 18px;
+}
+
+/* ── Notice banner ── */
+.phd-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #60a5fa;
+  line-height: 1.6;
+}
+
+.phd-notice-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
+
+/* ── Form field ── */
+.phd-field { margin-bottom: 14px; }
+
+.phd-label {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 7px;
+}
+
+.phd-label-hint {
+  display: block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: #2d3748;
+  letter-spacing: 0.04em;
+  margin-top: 5px;
+}
+
+.phd-input {
+  width: 100%;
+  background: #0d0f14;
+  border: 1px solid #252d3f;
+  border-radius: 5px;
+  padding: 9px 12px;
+  color: #e2e8f0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.phd-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+}
+
+.phd-input::placeholder { color: #2d3748; }
+
+/* Input + QR button row */
+.phd-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.phd-input-row .phd-input { flex: 1; width: auto; }
+
+.phd-qr-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0f14;
+  border: 1px solid #252d3f;
+  border-radius: 5px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.phd-qr-btn:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3b82f6;
+  color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phd-qr-btn:active { transform: scale(0.95); }
+
+/* ── Buttons ── */
+.phd-btn {
+  width: 100%;
+  padding: 10px 18px;
+  border-radius: 5px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.phd-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.phd-btn:active:not(:disabled) { transform: scale(0.98); }
+
+.phd-btn--blue {
+  background: #3b82f6;
+  color: #fff;
+}
+.phd-btn--blue:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+}
+
+.phd-btn--green {
+  background: #22c55e;
+  color: #000;
+  font-weight: 800;
+}
+.phd-btn--green:hover:not(:disabled) {
+  background: #16a34a;
+  box-shadow: 0 4px 14px rgba(34,197,94,0.3);
+}
+
+/* ── Spinner ── */
+.phd-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: phdSpin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes phdSpin { to { transform: rotate(360deg); } }
+
+/* ── Error box ── */
+.phd-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-top: 14px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #f87171;
+  line-height: 1.6;
+}
+
+/* ── Success result ── */
+.phd-result {
+  margin-top: 16px;
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.phd-result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.phd-result-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.phd-result-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #22c55e;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.phd-result-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #4a5568;
+  margin-top: 1px;
+}
+
+.phd-cid-box {
+  background: #0d0f14;
+  border: 1px solid #1e2433;
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.phd-cid-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4a5568;
+  margin-bottom: 5px;
+}
+
+.phd-cid-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #94a3b8;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+/* ── How-to steps ── */
+.phd-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.phd-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.phd-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.phd-step-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.phd-step-desc {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: #4a5568;
+  line-height: 1.65;
+}
+
+/* ── Privacy warning ── */
+.phd-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 5px;
+  padding: 10px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #d97706;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+
+.phd-privacy-icon {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #f59e0b;
+  margin-top: 1px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .phd-stats { grid-template-columns: 1fr; }
+}

@@ -3,6 +3,7 @@ import { useAuth } from "../context/AuthContext";
 import { uploadFile } from "../services/api";
 import { convertToBytes32 } from "../utils/helpers";
 import jsPDF from "jspdf";
+import QRScannerModal from "./QRScannerModal";
 import "../styling/MedicalRecordDrawer.css";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -26,7 +27,7 @@ interface MedicalRecordDrawerProps {
   onSuccess?: (cid: string) => void;
 }
 
-type DrawerStep = 1 | 2;
+type DrawerStep  = 1 | 2;
 type DrawerState = "form" | "processing" | "success" | "error";
 
 const EMPTY_FORM: FormData = {
@@ -55,7 +56,6 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
     if (!content.trim()) return currentY;
     let cy = currentY;
 
-    // Section header — light blue background
     doc.setFillColor(239, 246, 255);
     doc.setDrawColor(219, 234, 254);
     doc.rect(margin, cy, cW, 9, "FD");
@@ -63,9 +63,8 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
     doc.setFont("helvetica", "bold");
     doc.setTextColor(37, 99, 235);
     doc.text(title.toUpperCase(), margin + 4, cy + 6);
-    cy += 13; // extra space between heading and content
+    cy += 13;
 
-    // Content
     doc.setFontSize(9.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(30, 40, 55);
@@ -75,49 +74,39 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
       doc.text(line, margin + 4, cy);
       cy += 6;
     });
-    cy += 7; // extra space after content before next section
+    cy += 7;
     return cy;
   };
 
-  // ── Header block ──
   doc.setFillColor(13, 17, 23);
   doc.rect(0, 0, W, 40, "F");
-
   doc.setFillColor(59, 130, 246);
   doc.roundedRect(margin, 10, 6, 6, 1, 1, "F");
-
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(255, 255, 255);
   doc.text("AROGYACHAIN", margin + 9, 15.5);
-
   doc.setFontSize(6);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(148, 163, 184);
   doc.text("DECENTRALIZED HEALTH RECORD", margin + 9, 20);
-
   doc.setFontSize(8);
-doc.setFont("helvetica", "bold");
-doc.setTextColor(59, 130, 246);
-doc.text("MEDICAL RECORD", W - margin, 14, { align: "right" });
-
-doc.setFont("helvetica", "bold");
-doc.setFontSize(10);
-doc.setTextColor(220, 235, 255);
-doc.text(`Visit: ${form.dateOfVisit}`, W - margin, 21, { align: "right" });
-
-doc.setFont("helvetica", "normal");
-doc.setFontSize(6.5);
-doc.setTextColor(100, 116, 139);
-doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "right" });
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(59, 130, 246);
+  doc.text("MEDICAL RECORD", W - margin, 14, { align: "right" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(220, 235, 255);
+  doc.text(`Visit: ${form.dateOfVisit}`, W - margin, 21, { align: "right" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "right" });
   y = 47;
 
-  // ── Patient / Doctor row ──
   doc.setFillColor(239, 246, 255);
   doc.setDrawColor(219, 234, 254);
   doc.roundedRect(margin, y, cW, 22, 2, 2, "FD");
-
-  // Patient col
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(59, 130, 246);
@@ -133,8 +122,6 @@ doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "
     ? `${form.patientAddress.slice(0, 10)}...${form.patientAddress.slice(-6)}`
     : "—";
   doc.text(shortPat, margin + 4, y + 17.5);
-
-  // Doctor col
   const col2 = margin + cW / 2 + 4;
   doc.setFontSize(6.5);
   doc.setFont("helvetica", "bold");
@@ -149,14 +136,10 @@ doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "
   doc.setTextColor(107, 114, 128);
   const shortDoc = `${doctorAddress.slice(0, 10)}...${doctorAddress.slice(-6)}`;
   doc.text(shortDoc, col2, y + 17.5);
-
-  // Vertical divider
   doc.setDrawColor(219, 234, 254);
   doc.line(margin + cW / 2, y + 2, margin + cW / 2, y + 20);
-
   y += 27;
 
-  // ── Record title ──
   if (form.recordTitle) {
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
@@ -168,7 +151,6 @@ doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "
     y += 6;
   }
 
-  // ── Clinical sections ──
   y = addSection("Symptoms / Chief Complaint", form.symptoms, y);
   y = addSection("Diagnosis", form.diagnosis, y);
   y = addSection("Treatment Plan", form.treatmentPlan, y);
@@ -176,7 +158,6 @@ doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "
   y = addSection("Lab Results", form.labResults, y);
   y = addSection("Doctor Notes", form.doctorNotes, y);
 
-  // Follow-up
   if (form.followUpDate) {
     if (y > 265) { doc.addPage(); y = 20; }
     doc.setFillColor(254, 252, 232);
@@ -189,7 +170,6 @@ doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "
     y += 17;
   }
 
-  // ── Footer ──
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -212,20 +192,20 @@ export default function MedicalRecordDrawer({
   onSuccess,
 }: MedicalRecordDrawerProps) {
   const { contract, account } = useAuth();
-  const [step, setStep] = useState<DrawerStep>(1);
-  const [state, setState] = useState<DrawerState>("form");
-  const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [step,           setStep]           = useState<DrawerStep>(1);
+  const [state,          setState]          = useState<DrawerState>("form");
+  const [form,           setForm]           = useState<FormData>(EMPTY_FORM);
   const [processingStep, setProcessingStep] = useState(0);
-  const [resultCid, setResultCid] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [doctorName, setDoctorName] = useState("");
+  const [resultCid,      setResultCid]      = useState("");
+  const [errorMsg,       setErrorMsg]       = useState("");
+  const [doctorName,     setDoctorName]     = useState("");
+  const [qrOpen,         setQrOpen]         = useState(false);   // ← QR state
 
-  // Fetch doctor name from contract when drawer opens
   useState(() => {
     if (!contract || !account) return;
     contract.getDoctorName?.(account)
       .then((name: string) => { if (name) setDoctorName(name); })
-      .catch(() => {}); // graceful — name stays empty if not available
+      .catch(() => {});
   });
 
   const set = (field: keyof FormData) => (
@@ -250,12 +230,9 @@ export default function MedicalRecordDrawer({
 
   const handleSubmit = async () => {
     if (!contract || !account) return;
-
     setState("processing");
     setProcessingStep(0);
-
     try {
-      // Step 1: Generate PDF
       setProcessingStep(1);
       await new Promise((r) => setTimeout(r, 400));
       const pdfBlob = generateMedicalPDF(form, account, doctorName);
@@ -264,22 +241,17 @@ export default function MedicalRecordDrawer({
         `${form.recordTitle.replace(/\s+/g, "_")}_${form.dateOfVisit}.pdf`,
         { type: "application/pdf" }
       );
-
-      // Step 2: Upload to IPFS
       setProcessingStep(2);
       const ipfsResponse = await uploadFile(pdfFile);
-
-      // Step 3: Write to blockchain
       setProcessingStep(3);
       const tx = await contract.addMedicalRecord(
         form.patientAddress,
         form.recordTitle,
         ipfsResponse.cid,
         convertToBytes32(ipfsResponse.hash),
-        "" // prescription handled separately if needed
+        ""
       );
       await tx.wait();
-
       setResultCid(ipfsResponse.cid);
       setState("success");
       onSuccess?.(ipfsResponse.cid);
@@ -319,7 +291,7 @@ export default function MedicalRecordDrawer({
           <button className="drawer-close" onClick={handleClose}>×</button>
         </div>
 
-        {/* Steps indicator — only show on form state */}
+        {/* Steps indicator */}
         {state === "form" && (
           <div className="drawer-steps">
             {stepDef.map((s, i) => {
@@ -343,22 +315,58 @@ export default function MedicalRecordDrawer({
         {/* Body */}
         <div className="drawer-body">
 
-          {/* ── FORM ── */}
+          {/* ── STEP 1: Patient Info ── */}
           {state === "form" && step === 1 && (
             <>
               <div className="form-section">
                 <div className="form-section-title">Patient Information</div>
+
+                {/* ── Patient Address with QR button ── */}
                 <div className="form-group">
                   <label className="form-label">Patient Wallet Address *</label>
-                  <input
-                    className="form-input"
-                    placeholder="0x..."
-                    value={form.patientAddress}
-                    onChange={set("patientAddress")}
-                  />
+                  <div className="form-input-row">
+                    <input
+                      className="form-input"
+                      placeholder="0x..."
+                      value={form.patientAddress}
+                      onChange={set("patientAddress")}
+                    />
+                    <button
+                      type="button"
+                      className="form-qr-btn"
+                      onClick={() => setQrOpen(true)}
+                      title="Scan QR code"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ width: 16, height: 16 }}
+                      >
+                        <rect x="3"  y="3"  width="7" height="7" rx="1" />
+                        <rect x="14" y="3"  width="7" height="7" rx="1" />
+                        <rect x="3"  y="14" width="7" height="7" rx="1" />
+                        <path d="M14 14h2v2h-2zM18 14h3M14 18h2M18 18h3v3M21 14v2" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Scanned address confirmation chip */}
+                  {form.patientAddress && form.patientAddress.startsWith("0x") && form.patientAddress.length === 42 && (
+                    <div className="form-address-chip">
+                      <span className="form-address-chip-dot" />
+                      {form.patientAddress.slice(0, 10)}...{form.patientAddress.slice(-6)}
+                    </div>
+                  )}
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">Patient Name <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Patient Name <span className="optional">(optional)</span>
+                  </label>
                   <input
                     className="form-input"
                     placeholder="Full name for PDF report"
@@ -390,7 +398,9 @@ export default function MedicalRecordDrawer({
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Follow-up Date <span className="optional">(optional)</span></label>
+                    <label className="form-label">
+                      Follow-up Date <span className="optional">(optional)</span>
+                    </label>
                     <input
                       type="date"
                       className="form-input"
@@ -403,36 +413,22 @@ export default function MedicalRecordDrawer({
             </>
           )}
 
+          {/* ── STEP 2: Clinical Data ── */}
           {state === "form" && step === 2 && (
             <>
               <div className="form-section">
                 <div className="form-section-title">Clinical Information</div>
                 <div className="form-group">
                   <label className="form-label">Symptoms / Chief Complaint <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Describe what the patient came in with..."
-                    value={form.symptoms}
-                    onChange={set("symptoms")}
-                  />
+                  <textarea className="form-textarea" placeholder="Describe what the patient came in with..." value={form.symptoms} onChange={set("symptoms")} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Diagnosis <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Doctor's diagnosis..."
-                    value={form.diagnosis}
-                    onChange={set("diagnosis")}
-                  />
+                  <textarea className="form-textarea" placeholder="Doctor's diagnosis..." value={form.diagnosis} onChange={set("diagnosis")} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Treatment Plan <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Recommended course of treatment..."
-                    value={form.treatmentPlan}
-                    onChange={set("treatmentPlan")}
-                  />
+                  <textarea className="form-textarea" placeholder="Recommended course of treatment..." value={form.treatmentPlan} onChange={set("treatmentPlan")} />
                 </div>
               </div>
 
@@ -440,30 +436,15 @@ export default function MedicalRecordDrawer({
                 <div className="form-section-title">Medications &amp; Notes</div>
                 <div className="form-group">
                   <label className="form-label">Prescription / Medications <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Drug name, dosage, frequency..."
-                    value={form.prescription}
-                    onChange={set("prescription")}
-                  />
+                  <textarea className="form-textarea" placeholder="Drug name, dosage, frequency..." value={form.prescription} onChange={set("prescription")} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Lab Results <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea"
-                    placeholder="Test results, values, reference ranges..."
-                    value={form.labResults}
-                    onChange={set("labResults")}
-                  />
+                  <textarea className="form-textarea" placeholder="Test results, values, reference ranges..." value={form.labResults} onChange={set("labResults")} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Doctor Notes <span className="optional">(optional)</span></label>
-                  <textarea
-                    className="form-textarea tall"
-                    placeholder="Additional observations or notes..."
-                    value={form.doctorNotes}
-                    onChange={set("doctorNotes")}
-                  />
+                  <textarea className="form-textarea tall" placeholder="Additional observations or notes..." value={form.doctorNotes} onChange={set("doctorNotes")} />
                 </div>
               </div>
             </>
@@ -530,76 +511,49 @@ export default function MedicalRecordDrawer({
         <div className="drawer-footer">
           {state === "form" && step === 1 && (
             <>
-              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>
-                Cancel
-              </button>
-              <button
-                className="drawer-btn drawer-btn-primary"
-                onClick={() => setStep(2)}
-                disabled={!canProceed}
-              >
-                Next →
-              </button>
+              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>Cancel</button>
+              <button className="drawer-btn drawer-btn-primary" onClick={() => setStep(2)} disabled={!canProceed}>Next →</button>
             </>
           )}
-
           {state === "form" && step === 2 && (
             <>
-              <button className="drawer-btn drawer-btn-secondary" onClick={() => setStep(1)}>
-                ← Back
-              </button>
-              <button
-                className="drawer-btn drawer-btn-primary"
-                onClick={handleSubmit}
-              >
-                Generate &amp; Upload
-              </button>
+              <button className="drawer-btn drawer-btn-secondary" onClick={() => setStep(1)}>← Back</button>
+              <button className="drawer-btn drawer-btn-primary" onClick={handleSubmit}>Generate &amp; Upload</button>
             </>
           )}
-
           {state === "processing" && (
             <button className="drawer-btn drawer-btn-secondary" disabled>
-              <div className="drawer-spinner" />
-              Processing...
+              <div className="drawer-spinner" /> Processing...
             </button>
           )}
-
           {state === "success" && (
             <>
-              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>
-                Close
-              </button>
-              <button
-                className="drawer-btn drawer-btn-success"
-                onClick={() => {
-                  setStep(1);
-                  setState("form");
-                  setForm(EMPTY_FORM);
-                  setProcessingStep(0);
-                  setResultCid("");
-                }}
-              >
+              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>Close</button>
+              <button className="drawer-btn drawer-btn-success" onClick={() => { setStep(1); setState("form"); setForm(EMPTY_FORM); setProcessingStep(0); setResultCid(""); }}>
                 New Record
               </button>
             </>
           )}
-
           {state === "error" && (
             <>
-              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>
-                Cancel
-              </button>
-              <button
-                className="drawer-btn drawer-btn-primary"
-                onClick={() => { setState("form"); setStep(2); }}
-              >
-                Try Again
-              </button>
+              <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>Cancel</button>
+              <button className="drawer-btn drawer-btn-primary" onClick={() => { setState("form"); setStep(2); }}>Try Again</button>
             </>
           )}
         </div>
 
       </div>
+
+      {/* ── QR Scanner Modal ── */}
+      <QRScannerModal
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        onScan={(address) => {
+          setForm((prev) => ({ ...prev, patientAddress: address }));
+          setQrOpen(false);
+        }}
+        title="Scan Patient Wallet QR"
+      />
     </>
   );
 }

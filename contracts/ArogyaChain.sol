@@ -26,6 +26,7 @@ contract DecentralizedEHR {
         E12  Access denied
         E13  No prescription on this record
         E14  No health profile found
+        E15  No active emergency to revoke
     ============================================================= */
 
     /* =============================================================
@@ -487,6 +488,14 @@ contract DecentralizedEHR {
         return emergencyAccess[patient][doctor] >= block.timestamp;
     }
 
+    function revokeEmergencyAccess(address doctor) external onlyPatient {
+        require(
+            emergencyAccess[msg.sender][doctor] >= block.timestamp,
+            "E15"  // No active emergency to revoke
+        );
+        emergencyAccess[msg.sender][doctor] = 0;
+    }
+
     /* =============================================================
                             VIEW FUNCTIONS
     ============================================================= */
@@ -525,6 +534,19 @@ contract DecentralizedEHR {
     function getMyRecords() external view onlyPatient returns (bytes32[] memory) {
         return patientRecords[msg.sender];
     }
+
+    function getPatientRecords(address patient) external view onlyActiveDoctor returns (bytes32[] memory)
+    {
+        require(isPatient[patient], "E08");
+
+        bool hasPermission = doctorUploadPermission[patient][msg.sender];
+        bool hasEmergency  = emergencyAccess[patient][msg.sender] >= block.timestamp;
+
+        require(hasPermission || hasEmergency, "E12");
+
+        return patientRecords[patient];
+    }
+
 
     function getMyAccessDoctors() external view onlyPatient returns (address[] memory) {
         return patientActiveDoctors[msg.sender];

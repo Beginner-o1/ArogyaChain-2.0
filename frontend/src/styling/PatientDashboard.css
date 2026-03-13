@@ -661,3 +661,150 @@
   background: rgba(239, 68, 68, 0.22);
   opacity: 1;
 }
+
+.pd-topbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.pd-topbar .pd-stats-grid {
+  flex: 1;
+}
+
+.pd-bell-wrapper {
+  padding-top: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Add to PatientDashboard.css ── */
+
+/* Share form container */
+.pd-share-form {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pd-share-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4a5568;
+  margin: 0;
+}
+
+/* Row: [input+qr-btn] [grant] [cancel] */
+.pd-share-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Input + QR button grouped together */
+.pd-share-input-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.pd-share-input-wrap .pd-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Grant + Cancel buttons grouped */
+.pd-share-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* QR button — dark theme, blue on hover */
+.pd-qr-btn {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d0f14;
+  border: 1px solid #252d3f;
+  border-radius: 5px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+.pd-qr-btn:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3b82f6;
+  color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.pd-qr-btn:active {
+  transform: scale(0.95);
+}
+
+/* Scanned address confirmation chip */
+.pd-address-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #22c55e;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.pd-address-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  flex-shrink: 0;
+}
+
+/* ── Add to PatientDashboard.css ── */
+
+/* QR ID button — sits between Share and Delete */
+.pd-btn--qr-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid #252d3f;
+  border-radius: 5px;
+  color: #4a5568;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.pd-btn--qr-id:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.pd-btn--qr-id:active { transform: scale(0.96); }

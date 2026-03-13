@@ -5,8 +5,10 @@ import MyRecords from "../components/patient/MyRecords";
 import GrantPermissions from "../components/patient/GrantPermissions";
 import ViewPermissions from "../components/patient/ViewPermissions";
 import PatientProfile from "../components/patient/PatientProfile";
+import NotificationBell from "../components/patient/NotificationBell";
 import "../styling/PatientDashboard.css";
 import "../styling/PatientProfile.css";
+import "../styling/NotificationBell.css";
 
 interface MedicalRecord {
   id: number;
@@ -42,12 +44,12 @@ type ActiveTab = "records" | "grant" | "view" | "profile";
 export default function PatientDashboard() {
   const { contract, account } = useAuth();
 
-  const [activeTab,         setActiveTab]         = useState<ActiveTab>("records");
-  const [records,           setRecords]           = useState<MedicalRecord[]>([]);
-  const [recordsLoading,    setRecordsLoading]    = useState(true);
-  const [grantedDoctors,    setGrantedDoctors]    = useState<GrantedDoctor[]>([]);
-  const [grantedScanCenters,setGrantedScanCenters]= useState<GrantedScanCenter[]>([]);
-  const [permsLoading,      setPermsLoading]      = useState(false);
+  const [activeTab,          setActiveTab]          = useState<ActiveTab>("records");
+  const [records,            setRecords]            = useState<MedicalRecord[]>([]);
+  const [recordsLoading,     setRecordsLoading]     = useState(true);
+  const [grantedDoctors,     setGrantedDoctors]     = useState<GrantedDoctor[]>([]);
+  const [grantedScanCenters, setGrantedScanCenters] = useState<GrantedScanCenter[]>([]);
+  const [permsLoading,       setPermsLoading]       = useState(false);
 
   useEffect(() => { loadRecords(); }, [contract]);
 
@@ -62,11 +64,11 @@ export default function PatientDashboard() {
       setRecordsLoading(true);
       const recordIds = await contract.getMyRecords();
       const recordsData = await Promise.all(
-        recordIds.map(async (id: bigint) => {
+        recordIds.map(async (id: any) => {
           try {
             const record = await contract.viewRecord(id);
             return {
-              id:              Number(id),
+              id:              id,
               patient:         record.patient,
               uploader:        record.uploader,
               uploaderRole:    Number(record.uploaderRole),
@@ -139,40 +141,47 @@ export default function PatientDashboard() {
     <Layout title="Patient Dashboard">
       <div className="pd-space">
 
-        {/* ── Stats ── */}
-        <div className="pd-stats-grid">
-          <div className="pd-stat-card">
-            <div>
-              <p className="pd-stat-label">Total Records</p>
-              <p className="pd-stat-value">{records.length}</p>
+        {/* ── Stats + Notification Bell ── */}
+        <div className="pd-topbar">
+          <div className="pd-stats-grid">
+            <div className="pd-stat-card">
+              <div>
+                <p className="pd-stat-label">Total Records</p>
+                <p className="pd-stat-value">{records.length}</p>
+              </div>
+              <div className="pd-stat-icon pd-stat-icon--blue">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
             </div>
-            <div className="pd-stat-icon pd-stat-icon--blue">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <div className="pd-stat-card">
+              <div>
+                <p className="pd-stat-label">Medical Records</p>
+                <p className="pd-stat-value">{records.filter(r => r.recordType === 0).length}</p>
+              </div>
+              <div className="pd-stat-icon pd-stat-icon--green">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              </div>
+            </div>
+            <div className="pd-stat-card">
+              <div>
+                <p className="pd-stat-label">Scan Records</p>
+                <p className="pd-stat-value">{records.filter(r => r.recordType === 1).length}</p>
+              </div>
+              <div className="pd-stat-icon pd-stat-icon--purple">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
             </div>
           </div>
-          <div className="pd-stat-card">
-            <div>
-              <p className="pd-stat-label">Medical Records</p>
-              <p className="pd-stat-value">{records.filter(r => r.recordType === 0).length}</p>
-            </div>
-            <div className="pd-stat-icon pd-stat-icon--green">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-          </div>
-          <div className="pd-stat-card">
-            <div>
-              <p className="pd-stat-label">Scan Records</p>
-              <p className="pd-stat-value">{records.filter(r => r.recordType === 1).length}</p>
-            </div>
-            <div className="pd-stat-icon pd-stat-icon--purple">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+
+          {/* Notification Bell — floated to the right of the stat grid */}
+          <div className="pd-bell-wrapper">
+            <NotificationBell contract={contract} account={account ?? ""} />
           </div>
         </div>
 

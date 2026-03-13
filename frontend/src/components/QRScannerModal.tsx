@@ -15,9 +15,10 @@ export default function QRScannerModal({
   onScan,
   title = "Scan Wallet QR Code",
 }: QRScannerModalProps) {
-  const scannerRef = useRef<Html5Qrcode | null>(null);
-  const [error, setError] = useState("");
-  const [scanning, setScanning] = useState(false);
+  const scannerRef  = useRef<Html5Qrcode | null>(null);
+  const [error,     setError]     = useState("");
+  const [scanning,  setScanning]  = useState(false);
+  const [success,   setSuccess]   = useState("");
   const containerId = "qr-scanner-container";
 
   useEffect(() => {
@@ -26,31 +27,42 @@ export default function QRScannerModal({
     const startScanner = async () => {
       try {
         setError("");
-        setScanning(true);
+        setSuccess("");
+        setScanning(false);
 
-        await new Promise((r) => setTimeout(r, 200)); // wait for DOM
+        // Wait for DOM to mount the container
+        await new Promise((r) => setTimeout(r, 200));
 
         const scanner = new Html5Qrcode(containerId);
         scannerRef.current = scanner;
 
         await scanner.start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
+          { fps: 10, qrbox: { width: 200, height: 200 } },
           (decodedText) => {
-            // Extract Ethereum address from QR — handle plain address or URI
             const match = decodedText.match(/0x[a-fA-F0-9]{40}/);
             if (match) {
-              onScan(match[0]);
+              setSuccess(`Address detected: ${match[0].slice(0, 10)}...${match[0].slice(-6)}`);
               stopScanner();
-              onClose();
+              // Small delay so user sees the success state before modal closes
+              setTimeout(() => {
+                onScan(match[0]);
+                onClose();
+              }, 600);
             } else {
-              setError("QR code does not contain a valid wallet address.");
+              setError("QR code does not contain a valid Ethereum address.");
             }
           },
-          () => {} // ignore frame errors
+          () => {} // ignore per-frame decode errors
         );
+
+        setScanning(true);
       } catch (err: any) {
-        setError(err?.message || "Camera access denied. Please allow camera permissions.");
+        setError(
+          err?.message?.includes("Permission")
+            ? "Camera access denied. Please allow camera permissions and try again."
+            : err?.message || "Could not start camera."
+        );
         setScanning(false);
       }
     };
@@ -65,7 +77,7 @@ export default function QRScannerModal({
       try {
         await scannerRef.current.stop();
         scannerRef.current.clear();
-      } catch {}
+      } catch { /* already stopped */ }
       scannerRef.current = null;
     }
     setScanning(false);
@@ -74,6 +86,7 @@ export default function QRScannerModal({
   const handleClose = () => {
     stopScanner();
     setError("");
+    setSuccess("");
     onClose();
   };
 
@@ -82,22 +95,25 @@ export default function QRScannerModal({
   return (
     <>
       <div className="qr-overlay" onClick={handleClose} />
+
       <div className="qr-modal">
+        {/* ── Header ── */}
         <div className="qr-modal-header">
           <div className="qr-modal-title">{title}</div>
           <button className="qr-modal-close" onClick={handleClose}>×</button>
         </div>
 
+        {/* ── Body ── */}
         <div className="qr-modal-body">
           <p className="qr-modal-desc">
-            Point your camera at the wallet's QR code
+            Point your camera at the patient's wallet QR code
           </p>
 
+          {/* Camera viewport */}
           <div className="qr-viewport">
             <div id={containerId} className="qr-container" />
-            {scanning && (
-              <div className="qr-corner qr-corner--tl" />
-            )}
+
+            {/* Corner brackets + scan line — only shown while camera is live */}
             {scanning && (
               <>
                 <div className="qr-corner qr-corner--tl" />
@@ -109,20 +125,28 @@ export default function QRScannerModal({
             )}
           </div>
 
+          {/* States: loading → scanning (silent) → error or success */}
+          {!scanning && !error && !success && (
+            <div className="qr-loading">
+              <div className="qr-spinner" />
+              <span>Starting camera…</span>
+            </div>
+          )}
+
           {error && (
             <div className="qr-error">
               <span>⚠</span> {error}
             </div>
           )}
 
-          {!scanning && !error && (
-            <div className="qr-loading">
-              <div className="qr-spinner" />
-              <span>Starting camera...</span>
+          {success && (
+            <div className="qr-success">
+              <span>✓</span> {success}
             </div>
           )}
         </div>
 
+        {/* ── Footer ── */}
         <div className="qr-modal-footer">
           <button className="qr-cancel-btn" onClick={handleClose}>Cancel</button>
         </div>
