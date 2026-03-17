@@ -44,8 +44,13 @@ const EMPTY_FORM: FormData = {
   followUpDate: "",
 };
 
-// ── PDF Generator ──────────────────────────────────────────────
-function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: string): Blob {
+// ── PDF Generators ─────────────────────────────────────────────
+
+function generateMedicalPDF(
+  form: FormData,
+  doctorAddress: string,
+  doctorName: string
+): Blob {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = 210;
   const margin = 18;
@@ -55,7 +60,6 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
   const addSection = (title: string, content: string, currentY: number): number => {
     if (!content.trim()) return currentY;
     let cy = currentY;
-
     doc.setFillColor(239, 246, 255);
     doc.setDrawColor(219, 234, 254);
     doc.rect(margin, cy, cW, 9, "FD");
@@ -64,7 +68,6 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
     doc.setTextColor(37, 99, 235);
     doc.text(title.toUpperCase(), margin + 4, cy + 6);
     cy += 13;
-
     doc.setFontSize(9.5);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(30, 40, 55);
@@ -78,6 +81,7 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
     return cy;
   };
 
+  // Header
   doc.setFillColor(13, 17, 23);
   doc.rect(0, 0, W, 40, "F");
   doc.setFillColor(59, 130, 246);
@@ -104,6 +108,7 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
   doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 27, { align: "right" });
   y = 47;
 
+  // Patient / Doctor info bar
   doc.setFillColor(239, 246, 255);
   doc.setDrawColor(219, 234, 254);
   doc.roundedRect(margin, y, cW, 22, 2, 2, "FD");
@@ -170,6 +175,7 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
     y += 17;
   }
 
+  // Footer
   const totalPages = (doc as any).internal.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -185,6 +191,202 @@ function generateMedicalPDF(form: FormData, doctorAddress: string, doctorName: s
   return doc.output("blob");
 }
 
+// ── Prescription (Rx) PDF ──────────────────────────────────────
+// Clean Rx slip — only prescription content, no medical record data.
+// Shared with pharmacy only.
+
+function generatePrescriptionPDF(
+  form: FormData,
+  doctorAddress: string,
+  doctorName: string,
+  licenseNumber: string
+): Blob {
+  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const W = 210;
+  const margin = 18;
+  const cW = W - margin * 2;
+
+  // ── Header bar ──
+  doc.setFillColor(13, 17, 23);
+  doc.rect(0, 0, W, 40, "F");
+  doc.setFillColor(59, 130, 246);
+  doc.roundedRect(margin, 10, 6, 6, 1, 1, "F");
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.text("AROGYACHAIN", margin + 9, 15.5);
+  doc.setFontSize(6);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(148, 163, 184);
+  doc.text("DECENTRALIZED HEALTH RECORD", margin + 9, 20);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(34, 197, 94);
+  doc.text("PRESCRIPTION", W - margin, 14, { align: "right" });
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 116, 139);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, W - margin, 21, { align: "right" });
+  doc.text(`Date of Visit: ${form.dateOfVisit}`, W - margin, 27, { align: "right" });
+
+  let y = 50;
+
+  // ── Rx symbol + title ──
+  doc.setFontSize(28);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(37, 99, 235);
+  doc.text("℞", margin, y);
+  doc.setFontSize(13);
+  doc.setTextColor(17, 24, 39);
+  doc.text("PRESCRIPTION SLIP", margin + 12, y - 2);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(107, 114, 128);
+  doc.text(form.recordTitle || "Medical Record", margin + 12, y + 5);
+  y += 14;
+
+  doc.setDrawColor(229, 231, 235);
+  doc.line(margin, y, margin + cW, y);
+  y += 10;
+
+  // ── Patient info ──
+  doc.setFillColor(239, 246, 255);
+  doc.setDrawColor(219, 234, 254);
+  doc.roundedRect(margin, y, cW, 16, 2, 2, "FD");
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(59, 130, 246);
+  doc.text("PATIENT", margin + 4, y + 6);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(17, 24, 39);
+  doc.text(form.patientName || "—", margin + 4, y + 12);
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(107, 114, 128);
+  const shortPat = form.patientAddress
+    ? `${form.patientAddress.slice(0, 10)}...${form.patientAddress.slice(-6)}`
+    : "—";
+  doc.text(shortPat, margin + 72, y + 12);
+  y += 22;
+
+  // ── Medications block ──
+  doc.setFillColor(240, 253, 244);
+  doc.setDrawColor(134, 239, 172);
+  doc.roundedRect(margin, y, cW, 10, 2, 2, "FD");
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(21, 128, 61);
+  doc.text("PRESCRIBED MEDICATIONS", margin + 4, y + 7);
+  y += 15;
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(17, 24, 39);
+  const rxLines = doc.splitTextToSize(form.prescription, cW - 8);
+  rxLines.forEach((line: string) => {
+    if (y > 255) { doc.addPage(); y = 20; }
+    doc.text(line, margin + 4, y);
+    y += 7;
+  });
+  y += 10;
+
+  // ── Doctor signature block ──
+  if (y > 220) { doc.addPage(); y = 20; }
+
+  doc.setDrawColor(229, 231, 235);
+  doc.line(margin, y, margin + cW, y);
+  y += 10;
+
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(203, 213, 225);
+  doc.roundedRect(margin, y, cW, 34, 2, 2, "FD");
+
+  doc.setFontSize(6.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(59, 130, 246);
+  doc.text("PRESCRIBING DOCTOR", margin + 4, y + 7);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(17, 24, 39);
+  doc.text(doctorName ? `Dr. ${doctorName}` : "Dr. (On-Chain)", margin + 4, y + 14);
+
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(107, 114, 128);
+  doc.text(`License No: ${licenseNumber || "—"}`, margin + 4, y + 21);
+  doc.text(
+    `Wallet: ${doctorAddress.slice(0, 12)}...${doctorAddress.slice(-8)}`,
+    margin + 4,
+    y + 27
+  );
+
+  // Signature line on right side
+  doc.setDrawColor(17, 24, 39);
+  doc.line(margin + cW - 55, y + 28, margin + cW - 4, y + 28);
+  doc.setFontSize(6);
+  doc.setTextColor(156, 163, 175);
+  doc.text("Authorized Signature", margin + cW - 55, y + 32);
+  y += 40;
+
+  // ── On-chain verification note ──
+  if (y > 265) { doc.addPage(); y = 20; }
+  doc.setFillColor(254, 252, 232);
+  doc.setDrawColor(253, 224, 71);
+  doc.roundedRect(margin, y, cW, 14, 2, 2, "FD");
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(133, 77, 14);
+  doc.text(
+    "⚠  This prescription is cryptographically verified on-chain. Present to an authorized pharmacy only.",
+    margin + 5,
+    y + 6
+  );
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(161, 98, 7);
+  doc.text(
+    "Tampering or reuse of this document is detectable via blockchain audit trail.",
+    margin + 5,
+    y + 11
+  );
+
+  // ── Footer ──
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(229, 231, 235);
+    doc.line(margin, 285, W - margin, 285);
+    doc.setFontSize(6);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(156, 163, 175);
+    doc.text("ArogyaChain — Prescription Document (Pharmacy Use Only)", margin, 290);
+    doc.text(`Page ${i} of ${totalPages}`, W - margin, 290, { align: "right" });
+  }
+
+  return doc.output("blob");
+}
+
+// ── Unified generator — one call, two blobs ────────────────────
+interface GeneratedPDFs {
+  recordBlob: Blob;
+  prescriptionBlob: Blob | null;  // null if prescription field is empty
+}
+
+function generatePDFs(
+  form: FormData,
+  doctorAddress: string,
+  doctorName: string,
+  licenseNumber: string
+): GeneratedPDFs {
+  const recordBlob = generateMedicalPDF(form, doctorAddress, doctorName);
+  const prescriptionBlob = form.prescription.trim()
+    ? generatePrescriptionPDF(form, doctorAddress, doctorName, licenseNumber)
+    : null;
+  return { recordBlob, prescriptionBlob };
+}
+
 // ── Component ──────────────────────────────────────────────────
 export default function MedicalRecordDrawer({
   isOpen,
@@ -192,19 +394,26 @@ export default function MedicalRecordDrawer({
   onSuccess,
 }: MedicalRecordDrawerProps) {
   const { contract, account } = useAuth();
+
   const [step,           setStep]           = useState<DrawerStep>(1);
   const [state,          setState]          = useState<DrawerState>("form");
   const [form,           setForm]           = useState<FormData>(EMPTY_FORM);
   const [processingStep, setProcessingStep] = useState(0);
   const [resultCid,      setResultCid]      = useState("");
+  const [resultRxCid,    setResultRxCid]    = useState<string | null>(null);
   const [errorMsg,       setErrorMsg]       = useState("");
   const [doctorName,     setDoctorName]     = useState("");
-  const [qrOpen,         setQrOpen]         = useState(false);   // ← QR state
+  const [licenseNumber,  setLicenseNumber]  = useState("");
+  const [qrOpen,         setQrOpen]         = useState(false);
 
+  // Fetch doctor profile once
   useState(() => {
     if (!contract || !account) return;
-    contract.getDoctorName?.(account)
-      .then((name: string) => { if (name) setDoctorName(name); })
+    contract.getMyDoctorProfile?.()
+      .then((profile: { fullName: string; licenseNumber: string }) => {
+        if (profile?.fullName)     setDoctorName(profile.fullName);
+        if (profile?.licenseNumber) setLicenseNumber(profile.licenseNumber);
+      })
       .catch(() => {});
   });
 
@@ -224,6 +433,7 @@ export default function MedicalRecordDrawer({
     setForm(EMPTY_FORM);
     setProcessingStep(0);
     setResultCid("");
+    setResultRxCid(null);
     setErrorMsg("");
     onClose();
   };
@@ -232,29 +442,60 @@ export default function MedicalRecordDrawer({
     if (!contract || !account) return;
     setState("processing");
     setProcessingStep(0);
+
     try {
+      // ── Step 1: Generate PDFs (one pass, two blobs) ──
       setProcessingStep(1);
-      await new Promise((r) => setTimeout(r, 400));
-      const pdfBlob = generateMedicalPDF(form, account, doctorName);
-      const pdfFile = new File(
-        [pdfBlob],
+      await new Promise((r) => setTimeout(r, 300));
+
+      const { recordBlob, prescriptionBlob } = generatePDFs(
+        form,
+        account,
+        doctorName,
+        licenseNumber
+      );
+
+      const recordFile = new File(
+        [recordBlob],
         `${form.recordTitle.replace(/\s+/g, "_")}_${form.dateOfVisit}.pdf`,
         { type: "application/pdf" }
       );
+
+      const rxFile = prescriptionBlob
+        ? new File(
+            [prescriptionBlob],
+            `RX_${form.recordTitle.replace(/\s+/g, "_")}_${form.dateOfVisit}.pdf`,
+            { type: "application/pdf" }
+          )
+        : null;
+
+      // ── Step 2: Upload both to IPFS in parallel ──
       setProcessingStep(2);
-      const ipfsResponse = await uploadFile(pdfFile);
+      const uploadTasks: Promise<{ cid: string; hash: string }>[] = [
+        uploadFile(recordFile),
+        ...(rxFile ? [uploadFile(rxFile)] : []),
+      ];
+
+      const uploadResults = await Promise.all(uploadTasks);
+      const recordResult      = uploadResults[0];
+      const prescriptionResult = rxFile ? uploadResults[1] : null;
+
+      // ── Step 3: Write to blockchain ──
       setProcessingStep(3);
       const tx = await contract.addMedicalRecord(
         form.patientAddress,
         form.recordTitle,
-        ipfsResponse.cid,
-        convertToBytes32(ipfsResponse.hash),
-        ""
+        recordResult.cid,
+        convertToBytes32(recordResult.hash),
+        prescriptionResult?.cid ?? ""   // empty string if no prescription
       );
       await tx.wait();
-      setResultCid(ipfsResponse.cid);
+
+      setResultCid(recordResult.cid);
+      setResultRxCid(prescriptionResult?.cid ?? null);
       setState("success");
-      onSuccess?.(ipfsResponse.cid);
+      onSuccess?.(recordResult.cid);
+
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err?.reason || err?.message || "Something went wrong.");
@@ -264,9 +505,13 @@ export default function MedicalRecordDrawer({
 
   if (!isOpen) return null;
 
+  const hasPrescription = !!form.prescription.trim();
+
   const PROCESS_STEPS = [
-    "Generating PDF report",
-    "Uploading to IPFS via Pinata",
+    "Generating PDF reports",
+    hasPrescription
+      ? "Uploading record + prescription to IPFS"
+      : "Uploading record to IPFS",
     "Writing record to blockchain",
   ];
 
@@ -320,8 +565,6 @@ export default function MedicalRecordDrawer({
             <>
               <div className="form-section">
                 <div className="form-section-title">Patient Information</div>
-
-                {/* ── Patient Address with QR button ── */}
                 <div className="form-group">
                   <label className="form-label">Patient Wallet Address *</label>
                   <div className="form-input-row">
@@ -353,16 +596,15 @@ export default function MedicalRecordDrawer({
                       </svg>
                     </button>
                   </div>
-
-                  {/* Scanned address confirmation chip */}
-                  {form.patientAddress && form.patientAddress.startsWith("0x") && form.patientAddress.length === 42 && (
-                    <div className="form-address-chip">
-                      <span className="form-address-chip-dot" />
-                      {form.patientAddress.slice(0, 10)}...{form.patientAddress.slice(-6)}
-                    </div>
-                  )}
+                  {form.patientAddress &&
+                    form.patientAddress.startsWith("0x") &&
+                    form.patientAddress.length === 42 && (
+                      <div className="form-address-chip">
+                        <span className="form-address-chip-dot" />
+                        {form.patientAddress.slice(0, 10)}...{form.patientAddress.slice(-6)}
+                      </div>
+                    )}
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">
                     Patient Name <span className="optional">(optional)</span>
@@ -419,31 +661,68 @@ export default function MedicalRecordDrawer({
               <div className="form-section">
                 <div className="form-section-title">Clinical Information</div>
                 <div className="form-group">
-                  <label className="form-label">Symptoms / Chief Complaint <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Symptoms / Chief Complaint <span className="optional">(optional)</span>
+                  </label>
                   <textarea className="form-textarea" placeholder="Describe what the patient came in with..." value={form.symptoms} onChange={set("symptoms")} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Diagnosis <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Diagnosis <span className="optional">(optional)</span>
+                  </label>
                   <textarea className="form-textarea" placeholder="Doctor's diagnosis..." value={form.diagnosis} onChange={set("diagnosis")} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Treatment Plan <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Treatment Plan <span className="optional">(optional)</span>
+                  </label>
                   <textarea className="form-textarea" placeholder="Recommended course of treatment..." value={form.treatmentPlan} onChange={set("treatmentPlan")} />
                 </div>
               </div>
 
               <div className="form-section">
                 <div className="form-section-title">Medications &amp; Notes</div>
+
+                {/* Prescription field — highlighted to indicate it generates a separate Rx PDF */}
                 <div className="form-group">
-                  <label className="form-label">Prescription / Medications <span className="optional">(optional)</span></label>
-                  <textarea className="form-textarea" placeholder="Drug name, dosage, frequency..." value={form.prescription} onChange={set("prescription")} />
+                  <label className="form-label">
+                    Prescription / Medications
+                    <span className="optional"> (optional)</span>
+                    {form.prescription.trim() && (
+                      <span
+                        style={{
+                          marginLeft: 8,
+                          fontSize: 10,
+                          color: "#16a34a",
+                          fontWeight: 600,
+                          background: "#f0fdf4",
+                          border: "1px solid #86efac",
+                          borderRadius: 4,
+                          padding: "1px 6px",
+                        }}
+                      >
+                        ℞ Prescription PDF will be generated
+                      </span>
+                    )}
+                  </label>
+                  <textarea
+                    className="form-textarea"
+                    placeholder="Drug name, dosage, frequency... (this field generates a separate Rx slip for pharmacies)"
+                    value={form.prescription}
+                    onChange={set("prescription")}
+                  />
                 </div>
+
                 <div className="form-group">
-                  <label className="form-label">Lab Results <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Lab Results <span className="optional">(optional)</span>
+                  </label>
                   <textarea className="form-textarea" placeholder="Test results, values, reference ranges..." value={form.labResults} onChange={set("labResults")} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Doctor Notes <span className="optional">(optional)</span></label>
+                  <label className="form-label">
+                    Doctor Notes <span className="optional">(optional)</span>
+                  </label>
                   <textarea className="form-textarea tall" placeholder="Additional observations or notes..." value={form.doctorNotes} onChange={set("doctorNotes")} />
                 </div>
               </div>
@@ -480,8 +759,10 @@ export default function MedicalRecordDrawer({
               <div className="success-desc">
                 PDF generated, pinned to IPFS,<br />and written to the blockchain.
               </div>
+
+              {/* Medical Record CID */}
               <div className="success-cid-box">
-                <div className="success-cid-label">IPFS CID</div>
+                <div className="success-cid-label">IPFS CID — Medical Record</div>
                 <div className="success-cid-value">{resultCid}</div>
               </div>
               <button
@@ -489,8 +770,27 @@ export default function MedicalRecordDrawer({
                 style={{ width: "100%" }}
                 onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${resultCid}`, "_blank")}
               >
-                View PDF on IPFS ↗
+                View Medical Record PDF ↗
               </button>
+
+              {/* Prescription CID — only shown if prescription was generated */}
+              {resultRxCid && (
+                <>
+                  <div className="success-cid-box" style={{ marginTop: 10, borderColor: "#86efac", background: "#f0fdf4" }}>
+                    <div className="success-cid-label" style={{ color: "#16a34a" }}>
+                      IPFS CID — Prescription (Rx)
+                    </div>
+                    <div className="success-cid-value">{resultRxCid}</div>
+                  </div>
+                  <button
+                    className="drawer-btn drawer-btn-secondary"
+                    style={{ width: "100%", borderColor: "#86efac", color: "#16a34a" }}
+                    onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${resultRxCid}`, "_blank")}
+                  >
+                    View Prescription PDF ↗
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -518,7 +818,10 @@ export default function MedicalRecordDrawer({
           {state === "form" && step === 2 && (
             <>
               <button className="drawer-btn drawer-btn-secondary" onClick={() => setStep(1)}>← Back</button>
-              <button className="drawer-btn drawer-btn-primary" onClick={handleSubmit}>Generate &amp; Upload</button>
+              <button className="drawer-btn drawer-btn-primary" onClick={handleSubmit}>
+                Generate &amp; Upload
+                {hasPrescription && <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.8 }}>(+ Rx)</span>}
+              </button>
             </>
           )}
           {state === "processing" && (
@@ -529,7 +832,17 @@ export default function MedicalRecordDrawer({
           {state === "success" && (
             <>
               <button className="drawer-btn drawer-btn-secondary" onClick={handleClose}>Close</button>
-              <button className="drawer-btn drawer-btn-success" onClick={() => { setStep(1); setState("form"); setForm(EMPTY_FORM); setProcessingStep(0); setResultCid(""); }}>
+              <button
+                className="drawer-btn drawer-btn-success"
+                onClick={() => {
+                  setStep(1);
+                  setState("form");
+                  setForm(EMPTY_FORM);
+                  setProcessingStep(0);
+                  setResultCid("");
+                  setResultRxCid(null);
+                }}
+              >
                 New Record
               </button>
             </>
@@ -544,7 +857,7 @@ export default function MedicalRecordDrawer({
 
       </div>
 
-      {/* ── QR Scanner Modal ── */}
+      {/* QR Scanner Modal */}
       <QRScannerModal
         isOpen={qrOpen}
         onClose={() => setQrOpen(false)}

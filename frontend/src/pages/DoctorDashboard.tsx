@@ -7,16 +7,6 @@ import { handleError } from "../utils/helpers";
 import "../styling/DoctorDashboard.css";
 import "../styling/QRScannerModal.css";
 
-interface PatientRecord {
-  id: string;
-  title: string;
-  recordType: number;
-  recordCID: string;
-  prescriptionCID: string;
-  timestamp: string;
-  uploader: string;
-}
-
 type QRTarget = "emergency" | "record" | null;
 
 const QRIcon = () => (
@@ -41,16 +31,12 @@ export default function DoctorDashboard() {
   const [emergencyPatient, setEmergencyPatient] = useState<string | null>(null);
   const [profileCID,       setProfileCID]       = useState<string | null>(null);
 
-  /* ── Patient Records ── */
-  const [patientRecords,   setPatientRecords]   = useState<PatientRecord[]>([]);
-  const [recordsLoading,   setRecordsLoading]   = useState(false);
-
   /* ── Single Record Lookup ── */
   const [recordId,         setRecordId]         = useState("");
   const [viewingRecord,    setViewingRecord]     = useState<any>(null);
   const [viewLoading,      setViewLoading]       = useState(false);
 
-  /* ── Single QR handler for both fields ── */
+  /* ── QR handler ── */
   const handleQRScan = (value: string) => {
     if (qrTarget === "emergency") setEmergencyId(value);
     if (qrTarget === "record")    setRecordId(value);
@@ -58,13 +44,16 @@ export default function DoctorDashboard() {
   };
 
   /* ── Emergency Access ── */
+  // Activates 1-hour emergency access and fetches the patient's health profile.
+  // Medical records are intentionally NOT auto-fetched — the doctor must request
+  // specific records via the View Record by ID section using record IDs shared
+  // by the patient or retrieved from the health profile.
   const activateEmergencyAccess = async () => {
     if (!contract || !emergencyId.trim()) return;
     try {
       setEmergencyLoading(true);
       setEmergencyPatient(null);
       setProfileCID(null);
-      setPatientRecords([]);
 
       const tx = await contract.activateEmergencyAccess(emergencyId.trim());
       await tx.wait();
@@ -73,50 +62,16 @@ export default function DoctorDashboard() {
       setEmergencyPatient(patientAddress);
       setEmergencyId("");
 
-      let cid: string | null = null;
+      // Fetch health profile — may not exist (E14)
       try {
-        const [c] = await contract.getPatientProfileCID(patientAddress);
-        cid = c || null;
-      } catch { /* no profile */ }
-      setProfileCID(cid);
+        const [cid] = await contract.getPatientProfileCID(patientAddress);
+        setProfileCID(cid || null);
+      } catch { /* no profile uploaded */ }
 
-      await loadPatientRecords(patientAddress);
     } catch (error) {
       alert(handleError(error));
     } finally {
       setEmergencyLoading(false);
-    }
-  };
-
-  /* ── Load all patient records ── */
-  const loadPatientRecords = async (patientAddress: string) => {
-    if (!contract) return;
-    try {
-      setRecordsLoading(true);
-      const recordIds: string[] = await contract.getPatientRecords(patientAddress);
-      const records: PatientRecord[] = (
-        await Promise.all(
-          recordIds.map(async (id: string) => {
-            try {
-              const r = await contract.viewRecord(id);
-              return {
-                id,
-                title:           r.title || `Record ${id.slice(0, 8)}…`,
-                recordType:      Number(r.recordType),
-                recordCID:       r.recordCID,
-                prescriptionCID: r.prescriptionCID,
-                timestamp:       new Date(Number(r.timestamp) * 1000).toLocaleString(),
-                uploader:        r.uploader,
-              } as PatientRecord;
-            } catch { return null; }
-          })
-        )
-      ).filter((r): r is PatientRecord => r !== null);
-      setPatientRecords(records);
-    } catch (error) {
-      console.error("Error loading patient records:", error);
-    } finally {
-      setRecordsLoading(false);
     }
   };
 
@@ -142,9 +97,8 @@ export default function DoctorDashboard() {
     }
   };
 
-  const shortAddr            = (addr: string) => addr ? `${addr.slice(0, 8)}...${addr.slice(-6)}` : "—";
-  const recordTypeLabel      = (t: number)    => t === 0 ? "Medical Record" : "Scan Record";
-  const recordTypeBadgeClass = (t: number)    => t === 0 ? "dd-badge dd-badge--green" : "dd-badge dd-badge--purple";
+  const shortAddr = (addr: string) =>
+    addr ? `${addr.slice(0, 8)}...${addr.slice(-6)}` : "—";
 
   return (
     <Layout title="Doctor Dashboard">
@@ -195,9 +149,10 @@ export default function DoctorDashboard() {
           <div className="dd-card">
             <div className="dd-card-title">Emergency Access</div>
             <div className="dd-card-desc" style={{ marginBottom: 16 }}>
-              Activate temporary access to <strong>all records</strong> and the{" "}
-              <strong>health profile</strong> of a patient. Expires after{" "}
+              Activate temporary access to the patient's{" "}
+              <strong>health profile</strong>. Expires after{" "}
               <strong>1 hour</strong> and is permanently logged on-chain.
+              Use <strong>View Record by ID</strong> to access specific records.
             </div>
 
             <div className="dd-field">
@@ -238,29 +193,51 @@ export default function DoctorDashboard() {
               }
             </button>
 
+            {/* ── Emergency Result — profile only ── */}
             {emergencyPatient && (
               <div className="dd-emergency-result">
                 <div className="dd-emergency-result-header">
                   <span className="dd-emergency-badge">⚡ Emergency Access Active — 1 Hour</span>
-                  <span className="dd-emergency-patient">Patient: {shortAddr(emergencyPatient)}</span>
+                  <span className="dd-emergency-patient">
+                    Patient: {shortAddr(emergencyPatient)}
+                  </span>
                 </div>
+
+                {/* Health Profile */}
                 <div className="dd-emergency-section">
                   <p className="dd-emergency-section-label">Health Profile</p>
                   {profileCID ? (
                     <a
                       href={`https://gateway.pinata.cloud/ipfs/${profileCID}`}
-                      target="_blank" rel="noreferrer"
+                      target="_blank"
+                      rel="noreferrer"
                       className="dd-btn dd-btn--view dd-btn--sm"
                     >
                       📋 Open Patient Health Profile ↗
                     </a>
                   ) : (
-                    <p className="dd-emergency-none">No health profile uploaded by this patient.</p>
+                    <p className="dd-emergency-none">
+                      No health profile uploaded by this patient.
+                    </p>
                   )}
                 </div>
+
+                {/* Guidance note */}
+                <div className="dd-emergency-section">
+                  <p className="dd-emergency-section-label">Medical Records</p>
+                  <p className="dd-emergency-note">
+                    Use the <strong>View Record by ID</strong> panel to access
+                    individual records. Ask the patient or scan their record QR codes.
+                    Emergency access is valid for <strong>1 hour</strong>.
+                  </p>
+                </div>
+
                 <button
                   className="dd-btn dd-btn--ghost dd-btn--sm"
-                  onClick={() => { setEmergencyPatient(null); setPatientRecords([]); setProfileCID(null); }}
+                  onClick={() => {
+                    setEmergencyPatient(null);
+                    setProfileCID(null);
+                  }}
                 >
                   Dismiss
                 </button>
@@ -277,7 +254,8 @@ export default function DoctorDashboard() {
           <div className="dd-card">
             <div className="dd-card-title">View Record by ID</div>
             <div className="dd-card-desc" style={{ marginBottom: 16 }}>
-              Enter a specific record ID (bytes32) to view a single record directly.
+              Enter a record ID or scan the patient's record QR code to view a
+              specific record. Works with both normal and emergency access.
             </div>
 
             <div className="dd-field">
@@ -307,34 +285,53 @@ export default function DoctorDashboard() {
               onClick={handleViewRecord}
               disabled={!recordId.trim() || viewLoading}
             >
-              {viewLoading ? <><span className="dd-spinner" /> Fetching...</> : "View Record"}
+              {viewLoading
+                ? <><span className="dd-spinner" /> Fetching...</>
+                : "View Record"
+              }
             </button>
 
             {viewingRecord && (
               <div className="dd-result">
                 <div className="dd-result-row">
                   <span className="dd-result-key">Title</span>
-                  <span className="dd-result-val">{viewingRecord.title || `#${viewingRecord.id.slice(0, 10)}…`}</span>
+                  <span className="dd-result-val">
+                    {viewingRecord.title || `#${viewingRecord.id.slice(0, 10)}…`}
+                  </span>
                 </div>
                 <div className="dd-result-row">
                   <span className="dd-result-key">Patient</span>
-                  <span className="dd-result-val dd-result-val--mono">{shortAddr(viewingRecord.patient)}</span>
+                  <span className="dd-result-val dd-result-val--mono">
+                    {shortAddr(viewingRecord.patient)}
+                  </span>
                 </div>
                 <div className="dd-result-row">
-                  <span className="dd-result-key">Uploaded</span>
+                  <span className="dd-result-key">Uploader</span>
+                  <span className="dd-result-val dd-result-val--mono">
+                    {shortAddr(viewingRecord.uploader)}
+                  </span>
+                </div>
+                <div className="dd-result-row">
+                  <span className="dd-result-key">Date</span>
                   <span className="dd-result-val">{viewingRecord.timestamp}</span>
                 </div>
                 <div className="dd-result-actions">
                   <button
                     className="dd-btn dd-btn--outline"
-                    onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${viewingRecord.recordCID}`, "_blank")}
+                    onClick={() => window.open(
+                      `https://gateway.pinata.cloud/ipfs/${viewingRecord.recordCID}`,
+                      "_blank"
+                    )}
                   >
                     View PDF on IPFS ↗
                   </button>
                   {viewingRecord.prescriptionCID && (
                     <button
                       className="dd-btn dd-btn--outline-purple"
-                      onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${viewingRecord.prescriptionCID}`, "_blank")}
+                      onClick={() => window.open(
+                        `https://gateway.pinata.cloud/ipfs/${viewingRecord.prescriptionCID}`,
+                        "_blank"
+                      )}
                     >
                       View Prescription ↗
                     </button>
@@ -346,68 +343,6 @@ export default function DoctorDashboard() {
 
         </div>
 
-        {/* ── Patient Records List (after emergency access) ── */}
-        {emergencyPatient && (
-          <div className="dd-card">
-            <div className="dd-card-header">
-              <div>
-                <div className="dd-card-title">
-                  Patient Records
-                  <span className="dd-records-patient-badge">{shortAddr(emergencyPatient)}</span>
-                </div>
-                <div className="dd-card-desc">
-                  All medical records accessible during your emergency window.
-                </div>
-              </div>
-              <span className="dd-records-count">
-                {recordsLoading ? "Loading…" : `${patientRecords.length} record${patientRecords.length !== 1 ? "s" : ""}`}
-              </span>
-            </div>
-
-            {recordsLoading ? (
-              <div className="dd-records-loading">
-                <span className="dd-spinner" /> Loading records…
-              </div>
-            ) : patientRecords.length === 0 ? (
-              <div className="dd-records-empty">No records found for this patient.</div>
-            ) : (
-              <div className="dd-records-list">
-                {patientRecords.map((rec) => (
-                  <div key={rec.id} className="dd-record-item">
-                    <div className="dd-record-item-left">
-                      <span className={recordTypeBadgeClass(rec.recordType)}>
-                        {recordTypeLabel(rec.recordType)}
-                      </span>
-                      <div className="dd-record-item-info">
-                        <span className="dd-record-item-title">{rec.title}</span>
-                        <span className="dd-record-item-meta">
-                          Uploaded by {shortAddr(rec.uploader)} · {rec.timestamp}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="dd-record-item-actions">
-                      <button
-                        className="dd-btn dd-btn--outline dd-btn--sm"
-                        onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${rec.recordCID}`, "_blank")}
-                      >
-                        View PDF ↗
-                      </button>
-                      {rec.prescriptionCID && (
-                        <button
-                          className="dd-btn dd-btn--outline-purple dd-btn--sm"
-                          onClick={() => window.open(`https://gateway.pinata.cloud/ipfs/${rec.prescriptionCID}`, "_blank")}
-                        >
-                          Prescription ↗
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
       </div>
 
       <MedicalRecordDrawer
@@ -416,7 +351,6 @@ export default function DoctorDashboard() {
         onSuccess={(cid) => console.log("Record uploaded, CID:", cid)}
       />
 
-      {/* One modal handles both fields via qrTarget */}
       <QRScannerModal
         isOpen={qrTarget !== null}
         onClose={() => setQrTarget(null)}

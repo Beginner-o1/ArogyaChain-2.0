@@ -1,305 +1,352 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/Layout";
-import Card from "../components/Card";
+import QRScannerModal from "../components/QRScannerModal";
 import { uploadFile } from "../services/api";
 import { handleError, convertToBytes32 } from "../utils/helpers";
+import "../styling/DoctorDashboard.css";
+import "../styling/QRScannerModal.css";
+
+interface UploadHistoryItem {
+  patient:   string;
+  fileName:  string;
+  cid:       string;
+  timestamp: string;
+}
+
+const QRIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3"  y="3"  width="7" height="7" rx="1" />
+    <rect x="14" y="3"  width="7" height="7" rx="1" />
+    <rect x="3"  y="14" width="7" height="7" rx="1" />
+    <path d="M14 14h3v3h-3z M17 17h3v3h-3z M14 20h3" />
+  </svg>
+);
+
+const UploadIcon = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
 
 export default function ScanDashboard() {
-  const { contract } = useAuth();
-  const [patientAddress, setPatientAddress] = useState("");
-  const [scanFile, setScanFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadHistory, setUploadHistory] = useState<Array<{
-    patient: string;
-    timestamp: string;
-    fileName: string;
-  }>>([]);
+  const { contract, account } = useAuth();
 
+  const [patientAddress, setPatientAddress] = useState("");
+  const [scanTitle,      setScanTitle]      = useState("");
+  const [scanFile,       setScanFile]       = useState<File | null>(null);
+  const [uploading,      setUploading]      = useState(false);
+  const [qrOpen,         setQrOpen]         = useState(false);
+  const [dragOver,       setDragOver]       = useState(false);
+  const [uploadHistory,  setUploadHistory]  = useState<UploadHistoryItem[]>([]);
+
+  const shortAddr = (addr: string) =>
+    addr ? `${addr.slice(0, 8)}...${addr.slice(-6)}` : "—";
+
+  // ── File selection ──
+  const handleFileSelect = (file: File | null) => {
+    if (!file) return;
+    setScanFile(file);
+    // Auto-fill title from filename if empty
+    if (!scanTitle.trim()) {
+      setScanTitle(file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFileSelect(file);
+  };
+
+  // ── Upload ──
   const handleUploadScan = async () => {
-    if (!contract || !patientAddress || !scanFile) {
-      alert("Please fill all required fields");
+    if (!contract || !patientAddress.trim() || !scanFile || !scanTitle.trim()) {
+      alert("Please fill all required fields and select a file.");
       return;
     }
 
     try {
       setUploading(true);
 
-      // Upload scan file to backend/IPFS
+      // Upload to IPFS
       const response = await uploadFile(scanFile);
 
-      // Add scan record to blockchain
+      // Write to blockchain
       const tx = await contract.addScanRecord(
-        patientAddress,
+        patientAddress.trim(),
+        scanTitle.trim(),
         response.cid,
         convertToBytes32(response.hash)
       );
-
       await tx.wait();
 
-      alert("Scan record uploaded successfully!");
-
-      // Add to history
-      setUploadHistory([
-        {
-          patient: patientAddress,
-          timestamp: new Date().toLocaleString(),
-          fileName: scanFile.name,
-        },
-        ...uploadHistory,
-      ]);
+      // Add to session history
+      setUploadHistory(prev => [{
+        patient:   patientAddress.trim(),
+        fileName:  scanFile.name,
+        cid:       response.cid,
+        timestamp: new Date().toLocaleString(),
+      }, ...prev]);
 
       // Reset form
       setPatientAddress("");
+      setScanTitle("");
       setScanFile(null);
+
     } catch (error) {
-      console.error("Upload error:", error);
       alert(handleError(error));
     } finally {
       setUploading(false);
     }
   };
 
+  const canUpload = !!patientAddress.trim() && !!scanTitle.trim() && !!scanFile && !uploading;
+
   return (
     <Layout title="Scan Center Dashboard">
-      <div className="space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Role</p>
-                <p className="text-2xl font-bold text-gray-900">Scan Center</p>
-              </div>
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-            </div>
-          </Card>
+      <div className="dd-root">
 
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Status</p>
-                <p className="text-2xl font-bold text-green-600">Active</p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Uploads Today</p>
-                <p className="text-2xl font-bold text-gray-900">{uploadHistory.length}</p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-              </div>
-            </div>
-          </Card>
+        {/* ── Stat Cards ── */}
+        <div className="dd-stats">
+          <div className="dd-stat dd-stat--blue">
+            <div className="dd-stat-accent" />
+            <div className="dd-stat-label">Role</div>
+            <div className="dd-stat-value">Scan Center</div>
+            <div className="dd-stat-sub">Diagnostic imaging</div>
+          </div>
+          <div className="dd-stat dd-stat--green">
+            <div className="dd-stat-accent" />
+            <div className="dd-stat-label">Status</div>
+            <div className="dd-stat-value dd-stat-value--green">Active</div>
+            <div className="dd-stat-sub">Verified on-chain</div>
+          </div>
+          <div className="dd-stat dd-stat--blue">
+            <div className="dd-stat-accent" />
+            <div className="dd-stat-label">Wallet</div>
+            <div className="dd-stat-value dd-stat-value--mono">{shortAddr(account || "")}</div>
+            <div className="dd-stat-sub">Connected via MetaMask</div>
+          </div>
+          <div className="dd-stat dd-stat--green">
+            <div className="dd-stat-accent" />
+            <div className="dd-stat-label">Uploads This Session</div>
+            <div className="dd-stat-value dd-stat-value--green">{uploadHistory.length}</div>
+            <div className="dd-stat-sub">Since last login</div>
+          </div>
         </div>
 
-        {/* Upload Scan */}
-        <Card title="Upload Diagnostic Scan">
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <span className="font-medium">Note:</span> You can only upload scans for patients who have granted you upload permission.
-              </p>
-            </div>
-
+        {/* ── Upload Scan ── */}
+        <div className="dd-card">
+          <div className="dd-card-header">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Patient Wallet Address *
-              </label>
-              <input
-                type="text"
-                value={patientAddress}
-                onChange={(e) => setPatientAddress(e.target.value)}
-                placeholder="0x..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Patient must have granted you upload permission
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Scan File * (X-Ray, MRI, CT Scan, etc.)
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-purple-400 transition-colors">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label className="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500">
-                      <span>Upload a file</span>
-                      <input
-                        type="file"
-                        className="sr-only"
-                        onChange={(e) => setScanFile(e.target.files?.[0] || null)}
-                        accept="image/*,.pdf,.dcm"
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    PNG, JPG, PDF, DICOM up to 10MB
-                  </p>
-                </div>
+              <div className="dd-card-title">Upload Diagnostic Scan</div>
+              <div className="dd-card-desc">
+                Upload X-rays, MRI, CT scans or ultrasounds directly to IPFS
+                and record them on-chain. Patient must have granted you upload permission.
               </div>
-              {scanFile && (
-                <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-purple-900">{scanFile.name}</p>
-                      <p className="text-xs text-purple-700">
-                        {(scanFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setScanFile(null)}
-                      className="text-purple-600 hover:text-purple-800"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+            </div>
+          </div>
+
+          <div className="dd-grid-2" style={{ marginTop: 20 }}>
+
+            {/* Left — Patient + Title inputs */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+              {/* Patient Address */}
+              <div className="dd-field">
+                <label className="dd-label">
+                  Patient Wallet Address <span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <div className="dd-input-row">
+                  <input
+                    className="dd-input"
+                    type="text"
+                    placeholder="0x..."
+                    value={patientAddress}
+                    onChange={(e) => setPatientAddress(e.target.value)}
+                  />
+                  <button
+                    className="dd-qr-btn"
+                    type="button"
+                    onClick={() => setQrOpen(true)}
+                    title="Scan patient wallet QR"
+                  >
+                    <QRIcon />
+                  </button>
+                </div>
+                {patientAddress.startsWith("0x") && patientAddress.length === 42 && (
+                  <div className="dd-address-chip">
+                    <span className="dd-address-chip-dot" />
+                    {patientAddress.slice(0, 10)}...{patientAddress.slice(-6)}
                   </div>
+                )}
+              </div>
+
+              {/* Scan Title */}
+              <div className="dd-field">
+                <label className="dd-label">
+                  Scan Title <span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <input
+                  className="dd-input"
+                  type="text"
+                  placeholder="e.g. Chest X-Ray, Brain MRI, Abdominal CT"
+                  value={scanTitle}
+                  onChange={(e) => setScanTitle(e.target.value)}
+                />
+              </div>
+
+              {/* Warning */}
+              <div className="dd-warning">
+                <span className="dd-warning-icon">⚠</span>
+                Patient must have granted this center upload permission via their dashboard.
+              </div>
+
+            </div>
+
+            {/* Right — File drop zone */}
+            <div className="dd-field">
+              <label className="dd-label">
+                Scan File <span style={{ color: "#ef4444" }}>*</span>
+                <span style={{ marginLeft: 6, fontWeight: 400, fontSize: 11, color: "#6b7280" }}>
+                  PNG, JPG, PDF, DICOM
+                </span>
+              </label>
+
+              {!scanFile ? (
+                <div
+                  className={`dd-dropzone ${dragOver ? "dd-dropzone--active" : ""}`}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById("scan-file-input")?.click()}
+                >
+                  <div className="dd-dropzone-icon" style={{ color: "#6b7280" }}>
+                    <UploadIcon />
+                  </div>
+                  <p className="dd-dropzone-text">
+                    Drag & drop or <span className="dd-dropzone-link">browse file</span>
+                  </p>
+                  <p className="dd-dropzone-hint">PNG, JPG, PDF, DICOM — up to 50MB</p>
+                  <input
+                    id="scan-file-input"
+                    type="file"
+                    style={{ display: "none" }}
+                    accept="image/*,.pdf,.dcm"
+                    onChange={(e) => handleFileSelect(e.target.files?.[0] || null)}
+                  />
+                </div>
+              ) : (
+                <div className="dd-file-preview">
+                  <div className="dd-file-preview-icon">📄</div>
+                  <div className="dd-file-preview-info">
+                    <p className="dd-file-preview-name">{scanFile.name}</p>
+                    <p className="dd-file-preview-size">
+                      {(scanFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <button
+                    className="dd-file-preview-remove"
+                    onClick={() => setScanFile(null)}
+                    title="Remove file"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
             </div>
 
-            <button
-              onClick={handleUploadScan}
-              disabled={uploading || !patientAddress || !scanFile}
-              className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium"
-            >
-              {uploading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Uploading to Blockchain...
-                </span>
-              ) : (
-                "Upload Scan Record"
-              )}
-            </button>
           </div>
-        </Card>
 
-        {/* Upload History */}
-        <Card title="Recent Uploads">
+          {/* Upload Button */}
+          <button
+            className="dd-btn dd-btn--primary"
+            style={{ marginTop: 20, width: "100%" }}
+            onClick={handleUploadScan}
+            disabled={!canUpload}
+          >
+            {uploading
+              ? <><span className="dd-spinner" /> Uploading to blockchain...</>
+              : "Upload Scan Record"
+            }
+          </button>
+        </div>
+
+        {/* ── Upload History (session only) ── */}
+        <div className="dd-card">
+          <div className="dd-card-header">
+            <div className="dd-card-title">
+              Recent Uploads
+              <span style={{
+                marginLeft: 10,
+                fontSize: 12,
+                fontWeight: 400,
+                color: "#6b7280",
+              }}>
+                This session only
+              </span>
+            </div>
+          </div>
+
           {uploadHistory.length === 0 ? (
-            <div className="text-center py-8">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="mt-2 text-gray-600">No uploads yet</p>
-              <p className="text-sm text-gray-500">Your upload history will appear here</p>
+            <div className="dd-records-empty" style={{ padding: "32px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 8, opacity: 0.4 }}>🔬</div>
+              <p style={{ color: "#6b7280", fontSize: 13 }}>No uploads yet this session.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {uploadHistory.map((upload, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{upload.fileName}</p>
-                      <p className="text-xs text-gray-500">
-                        Patient: {upload.patient.slice(0, 6)}...{upload.patient.slice(-4)}
-                      </p>
+            <div className="dd-records-list">
+              {uploadHistory.map((item, i) => (
+                <div key={i} className="dd-record-item">
+                  <div className="dd-record-item-left">
+                    <span className="dd-badge dd-badge--purple">Scan Record</span>
+                    <div className="dd-record-item-info">
+                      <span className="dd-record-item-title">{item.fileName}</span>
+                      <span className="dd-record-item-meta">
+                        Patient: {shortAddr(item.patient)} · {item.timestamp}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">{upload.timestamp}</p>
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                      Uploaded
+                  <div className="dd-record-item-actions">
+                    <button
+                      className="dd-btn dd-btn--outline dd-btn--sm"
+                      onClick={() => window.open(
+                        `https://gateway.pinata.cloud/ipfs/${item.cid}`,
+                        "_blank"
+                      )}
+                    >
+                      View on IPFS ↗
+                    </button>
+                    <span style={{
+                      fontSize: 11,
+                      color: "#16a34a",
+                      background: "#f0fdf4",
+                      border: "1px solid #86efac",
+                      borderRadius: 4,
+                      padding: "3px 8px",
+                      fontWeight: 600,
+                    }}>
+                      ✓ On-chain
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </Card>
+        </div>
 
-        {/* Instructions */}
-        <Card title="Upload Guidelines">
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600 font-bold text-sm">1</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Verify Patient Permission</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Ensure the patient has granted you upload permission before attempting to upload scans.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600 font-bold text-sm">2</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Supported File Types</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Upload X-rays, MRI scans, CT scans, ultrasounds in DICOM, PNG, JPG, or PDF format.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-purple-600 font-bold text-sm">3</span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-900">Data Privacy</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  All scans are encrypted and stored on IPFS. Only the patient and authorized parties can access them.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mt-4">
-              <p className="text-sm text-yellow-800">
-                <span className="font-medium">Important:</span> Ensure all patient information is properly anonymized before upload. All uploads are permanently recorded on the blockchain.
-              </p>
-            </div>
-          </div>
-        </Card>
       </div>
+
+      <QRScannerModal
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        onScan={(address) => { setPatientAddress(address); setQrOpen(false); }}
+        title="Scan Patient Wallet QR"
+      />
     </Layout>
   );
 }

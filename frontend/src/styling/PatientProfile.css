@@ -246,3 +246,10 @@
 .pp-submit-btn {
   min-width: 200px;
 }
+
+.pp-section--alert { border: 1px solid #ef4444; border-radius: 8px; padding: 12px; }
+.pp-section-label--alert { color: #ef4444; }
+.pp-section-hint { font-size: 11px; color: #6b7280; margin: 4px 0 8px; }
+.pp-bmi-preview { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #1a1f2e; border-radius: 6px; border: 1px solid #374151; }
+.pp-bmi-label { font-size: 11px; color: #6b7280; font-weight: 600; }
+.pp-bmi-value { font-size: 13px; font-weight: 700; color: #60a5fa; }

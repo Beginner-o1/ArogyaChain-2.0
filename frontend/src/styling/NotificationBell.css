@@ -248,3 +248,40 @@
 @keyframes nb-spin {
   to { transform: rotate(360deg); }
 }
+
+.nb-license {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.nb-item-addr {
+  font-size: 10px;
+  color: #6b7280;
+  margin: 2px 0 4px;
+}
+
+.nb-countdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1a1f2e;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 5px 10px;
+  margin-bottom: 8px;
+}
+
+.nb-countdown-icon { font-size: 13px; }
+
+.nb-countdown-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f59e0b;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.nb-item-footer--expired {
+  padding-top: 6px;
+  border-top: 1px solid #1f2937;
+}
