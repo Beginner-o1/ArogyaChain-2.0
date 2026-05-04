@@ -76,6 +76,7 @@ export default function ScanDashboard() {
 
       // Upload to IPFS
       const response = await uploadFile(scanFile);
+      console.log("Upload response:", response);
 
       // Write to blockchain
       const tx = await contract.addScanRecord(
