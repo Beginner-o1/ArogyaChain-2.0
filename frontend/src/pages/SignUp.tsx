@@ -571,7 +571,7 @@ export default function Signup() {
 
             <div className="ac-card-footer">
               Already registered?{" "}
-              <span className="ac-link" onClick={() => navigate("/")}>Sign in here</span>
+              <span className="ac-link" onClick={() => navigate("/login")}>Sign in here</span>
               <br />
               One registration per wallet · Immutable on Sepolia
             </div>
