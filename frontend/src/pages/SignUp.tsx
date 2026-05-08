@@ -52,11 +52,11 @@ const ROLES = [
       </svg>
     ),
     fields: [
-      { key: "pharmacyName",  label: "Pharmacy Name",  placeholder: "MedPlus Pharmacy",      required: true },
-      { key: "licenseNumber", label: "License Number", placeholder: "PH-TN-2024-00321",      required: true },
-      { key: "location",      label: "Location",       placeholder: "Chennai, Tamil Nadu",    required: true },
-      { key: "contactEmail",  label: "Contact Email",  placeholder: "medplus@example.com",    required: false },
-      { key: "contactPhone",  label: "Contact Phone",  placeholder: "+91-9876543210",         required: false },
+      { key: "pharmacyName",  label: "Pharmacy Name",  placeholder: "MedPlus Pharmacy",   required: true },
+      { key: "licenseNumber", label: "License Number", placeholder: "PH-TN-2024-00321",   required: true },
+      { key: "location",      label: "Location",       placeholder: "Chennai, Tamil Nadu", required: true },
+      { key: "contactEmail",  label: "Contact Email",  placeholder: "medplus@example.com", required: false },
+      { key: "contactPhone",  label: "Contact Phone",  placeholder: "+91-9876543210",      required: false },
     ],
   },
   {
@@ -71,11 +71,11 @@ const ROLES = [
       </svg>
     ),
     fields: [
-      { key: "centerName",    label: "Center Name",    placeholder: "ClearView Radiology",   required: true },
-      { key: "licenseNumber", label: "License Number", placeholder: "SC-KA-2024-11245",      required: true },
-      { key: "location",      label: "Location",       placeholder: "Bangalore, Karnataka",  required: true },
-      { key: "contactEmail",  label: "Contact Email",  placeholder: "info@clearview.com",    required: false },
-      { key: "contactPhone",  label: "Contact Phone",  placeholder: "+91-9876543210",        required: false },
+      { key: "centerName",    label: "Center Name",    placeholder: "ClearView Radiology", required: true },
+      { key: "licenseNumber", label: "License Number", placeholder: "SC-KA-2024-11245",    required: true },
+      { key: "location",      label: "Location",       placeholder: "Bangalore, Karnataka",required: true },
+      { key: "contactEmail",  label: "Contact Email",  placeholder: "info@clearview.com",  required: false },
+      { key: "contactPhone",  label: "Contact Phone",  placeholder: "+91-9876543210",      required: false },
     ],
   },
 ];
@@ -83,6 +83,92 @@ const ROLES = [
 const DOT_COLORS: Record<string, string> = {
   blue: "#63b3ed", teal: "#4fd1c5", amber: "#f6ad55", green: "#68d391",
 };
+
+// ── Pending Approval Screen ────────────────────────────────────
+function PendingScreen({ role, address }: { role: string; address: string }) {
+  const truncate = (a: string) => a ? `${a.slice(0, 6)}...${a.slice(-4)}` : "";
+  return (
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "#050c14", padding: "24px",
+    }}>
+      <div className="ac-grid-bg" />
+      <div className="ac-orb ac-orb-1" />
+      <div className="ac-orb ac-orb-2" />
+      <div style={{
+        position: "relative", zIndex: 1,
+        background: "rgba(10,20,38,0.85)", backdropFilter: "blur(20px)",
+        border: "1px solid rgba(99,179,237,0.18)", borderRadius: "20px",
+        padding: "48px 40px", maxWidth: 480, width: "100%", textAlign: "center",
+      }}>
+        {/* Animated clock icon */}
+        <div style={{
+          width: 72, height: 72, borderRadius: "50%",
+          background: "rgba(245,158,11,0.12)",
+          border: "1px solid rgba(245,158,11,0.35)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 28px", boxShadow: "0 0 32px rgba(245,158,11,0.2)",
+          animation: "pulseWarn 2s ease-in-out infinite",
+        }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f6ad55" strokeWidth="1.8"
+            strokeLinecap="round" strokeLinejoin="round" width="32" height="32">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+
+        <div style={{
+          fontFamily: "'Syne', sans-serif", fontSize: 22, fontWeight: 800,
+          color: "#e8f1fb", letterSpacing: "0.04em", marginBottom: 12,
+        }}>
+          Application Submitted
+        </div>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+          color: "rgba(232,241,251,0.45)", lineHeight: 1.8, marginBottom: 28,
+        }}>
+          Your <span style={{ color: "#f6ad55" }}>{role}</span> registration is on-chain and
+          awaiting admin approval. You'll be able to use the platform once approved.
+        </div>
+
+        {/* Info rows */}
+        {[
+          ["ROLE",    role],
+          ["WALLET",  truncate(address)],
+          ["STATUS",  "Pending Review"],
+          ["NETWORK", "Sepolia Testnet"],
+        ].map(([k, v]) => (
+          <div key={k} style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: "10px 0", borderBottom: "1px solid rgba(99,179,237,0.08)",
+          }}>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: "rgba(232,241,251,0.3)", letterSpacing: "0.15em" }}>{k}</span>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+              color: k === "STATUS" ? "#f6ad55" : "rgba(232,241,251,0.7)",
+            }}>{v}</span>
+          </div>
+        ))}
+
+        <div style={{
+          marginTop: 32, padding: "14px 16px", borderRadius: 10,
+          background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)",
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+          color: "rgba(245,158,11,0.8)", lineHeight: 1.8, letterSpacing: "0.04em",
+        }}>
+          The admin reviews applications manually. Once approved, reconnect your wallet and sign in.
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes pulseWarn {
+          0%, 100% { box-shadow: 0 0 32px rgba(245,158,11,0.2); }
+          50% { box-shadow: 0 0 48px rgba(245,158,11,0.45); }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default function Signup() {
   const [selected, setSelected]       = useState("patient");
@@ -93,6 +179,9 @@ export default function Signup() {
   const [statusMsg, setStatusMsg]     = useState("Choose a role and connect your wallet.");
   const [formValues, setFormValues]   = useState<Record<string, string>>({});
   const [panelOpen, setPanelOpen]     = useState(false);
+  // New: after non-patient registration succeeds, show pending screen
+  const [pendingApproval, setPendingApproval] = useState<{ role: string; address: string } | null>(null);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const hasError = searchParams.get("error") === "not-registered";
@@ -100,7 +189,6 @@ export default function Signup() {
   const selectedRole = ROLES.find(r => r.id === selected)!;
   const needsDetails = selectedRole.fields.length > 0;
 
-  // When role changes, reset form + auto-open panel if role needs details
   useEffect(() => {
     setFormValues({});
     setPanelOpen(needsDetails);
@@ -115,7 +203,6 @@ export default function Signup() {
       .filter(f => f.required)
       .every(f => (formValues[f.key] || "").trim().length > 0);
   };
-
 
   useEffect(() => {
     const check = async () => {
@@ -208,9 +295,16 @@ export default function Signup() {
       await tx.wait();
 
       setStatusState("ok");
-      setStatusMsg(`Successfully registered as ${selectedRole.label}! Redirecting…`);
-      setPanelOpen(false);
-      setTimeout(() => navigate("/"), 2000);
+
+      if (selected === "patient") {
+        // Patients are active immediately
+        setStatusMsg("Successfully registered as Patient! Redirecting…");
+        setPanelOpen(false);
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        // Providers go into pending — show the pending screen
+        setPendingApproval({ role: selectedRole.label, address: userAddress });
+      }
 
     } catch (error: any) {
       console.error(error);
@@ -218,14 +312,24 @@ export default function Signup() {
       if (error?.code === 4001) {
         setStatusMsg("Transaction rejected by user.");
       } else if (error?.reason) {
-        setStatusMsg(`Contract error: ${error.reason}`);
+        const reasonMap: Record<string, string> = {
+          "E06": "This wallet is already registered.",
+          "E16": "Your application is already pending review.",
+          "E17": "This wallet has been permanently rejected by admin.",
+        };
+        setStatusMsg(reasonMap[error.reason] || `Contract error: ${error.reason}`);
       } else {
-        setStatusMsg("Registration failed. You may already be registered.");
+        setStatusMsg("Registration failed. You may already be registered or rejected.");
       }
     } finally {
       setLoading(false);
     }
   };
+
+  // ── Show pending screen after provider registration ──────────
+  if (pendingApproval) {
+    return <PendingScreen role={pendingApproval.role} address={pendingApproval.address} />;
+  }
 
   const dotClass = { idle:"idle", loading:"spin", ok:"ok", warn:"warn", err:"err" }[statusState];
   const truncate = (a: string) => a ? `${a.slice(0,6)}...${a.slice(-4)}` : "";
@@ -249,16 +353,12 @@ export default function Signup() {
       <div className={`ac-details-overlay${panelOpen ? " open" : ""}`}>
         <div className="ac-details-backdrop" onClick={() => !loading && setPanelOpen(false)} />
         <div className="ac-details-panel">
-
-          {/* Close btn */}
           <button className="ac-panel-close" onClick={() => !loading && setPanelOpen(false)}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
               strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
-
-          {/* Header */}
           <div className="ac-panel-header">
             <div className="ac-panel-eyebrow" style={{ color: accentColor }}>
               <span style={{
@@ -272,9 +372,30 @@ export default function Signup() {
             <div className="ac-panel-subtitle">
               Fields marked <span style={{ color: "var(--red)" }}>*</span> are required by the contract
             </div>
+
+            {/* Pending approval notice for providers */}
+            <div style={{
+              marginTop: 14, padding: "10px 14px", borderRadius: 8,
+              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)",
+              display: "flex", alignItems: "flex-start", gap: 10,
+            }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#f6ad55" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" width="15" height="15"
+                style={{ flexShrink: 0, marginTop: 1 }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                color: "rgba(245,158,11,0.85)", lineHeight: 1.7,
+              }}>
+                {selectedRole.label} accounts require <strong>admin approval</strong> before activation.
+                Your application will be reviewed after submission.
+              </span>
+            </div>
           </div>
 
-          {/* Fields */}
           <div className="ac-panel-body">
             {selectedRole.fields.map((field) => (
               <div className="ac-field" key={field.key}>
@@ -298,7 +419,6 @@ export default function Signup() {
               </div>
             ))}
 
-            {/* Inline status inside panel */}
             {statusState !== "idle" && (
               <div className={`ac-status st-${statusState}`} style={{ marginBottom: 0 }}>
                 <span className={`ac-status-dot ${dotClass}`} />
@@ -310,7 +430,6 @@ export default function Signup() {
             )}
           </div>
 
-          {/* Footer */}
           <div className="ac-panel-footer">
             <button
               className="ac-btn ac-btn-primary"
@@ -326,11 +445,10 @@ export default function Signup() {
                     strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                   </svg>
-                  Register as {selectedRole.label}
+                  Submit Application
                 </>
               )}
             </button>
-
             {networkOk === false && (
               <button className="ac-btn ac-btn-ghost" onClick={switchToSepolia} disabled={loading}>
                 Switch to Sepolia Testnet
@@ -342,8 +460,6 @@ export default function Signup() {
 
       {/* ── Main layout ── */}
       <div className="ac-root">
-
-        {/* Left panel */}
         <div className="ac-left">
           <div className="ac-logo">
             <div className="ac-logo-icon"><HeartIcon /></div>
@@ -364,7 +480,7 @@ export default function Signup() {
             {[
               ["blue",  "One-time on-chain registration per wallet"],
               ["teal",  "Role enforced at the contract level — not the UI"],
-              ["amber", "Admin can deactivate providers, never patients"],
+              ["amber", "Providers require admin approval before activation"],
               ["green", "All actions are publicly auditable on Sepolia"],
             ].map(([color, text], i) => (
               <div className="ac-feat" key={i}>
@@ -375,7 +491,6 @@ export default function Signup() {
           </div>
         </div>
 
-        {/* Right panel */}
         <div className="ac-right">
           <div className="ac-card">
             <div className="ac-card-eyebrow">
@@ -385,7 +500,7 @@ export default function Signup() {
 
             <div className="ac-card-title">Create Account</div>
             <div className="ac-card-desc">
-              Select your role. Providers will be asked to fill in profile details before signing up.
+              Patients are activated instantly. Doctors, Pharmacies, and Scan Centers require admin approval.
             </div>
 
             {hasError && (
@@ -417,10 +532,11 @@ export default function Signup() {
               {ROLES.map((role) => {
                 const isActive = selected === role.id;
                 const color = DOT_COLORS[role.dot];
+                const isProvider = role.fields.length > 0;
                 return (
                   <button
                     key={role.id}
-                    onClick={() => { setSelected(role.id); if (role.fields.length > 0) setPanelOpen(true); }}
+                    onClick={() => { setSelected(role.id); if (isProvider) setPanelOpen(true); }}
                     disabled={loading}
                     style={{
                       display:"flex", alignItems:"center", gap:"14px",
@@ -453,6 +569,18 @@ export default function Signup() {
                         letterSpacing:"0.04em", transition:"color 0.18s ease",
                       }}>
                         {role.label}
+                        {/* Approval badge for providers */}
+                        {isProvider && (
+                          <span style={{
+                            marginLeft: 8, fontSize: 8, letterSpacing: "0.1em",
+                            background: "rgba(245,158,11,0.15)",
+                            border: "1px solid rgba(245,158,11,0.3)",
+                            color: "#f6ad55", borderRadius: 3, padding: "1px 5px",
+                            verticalAlign: "middle",
+                          }}>
+                            NEEDS APPROVAL
+                          </span>
+                        )}
                       </span>
                       <span style={{
                         display:"block", fontFamily:"'JetBrains Mono',monospace",
@@ -463,8 +591,7 @@ export default function Signup() {
                       </span>
                     </span>
 
-                    {/* Right side: arrow for providers, check for patient */}
-                    {role.fields.length > 0 ? (
+                    {isProvider ? (
                       <div style={{
                         display:"flex", alignItems:"center", gap:5, flexShrink:0,
                         fontFamily:"'JetBrains Mono',monospace", fontSize:9,
@@ -491,7 +618,6 @@ export default function Signup() {
               })}
             </div>
 
-            {/* Status (shown on main card for patient / idle states) */}
             {(selected === "patient" || statusState !== "idle") && (
               <div className={`ac-status st-${statusState}`}>
                 <span className={`ac-status-dot ${dotClass}`} />
@@ -502,7 +628,6 @@ export default function Signup() {
               </div>
             )}
 
-            {/* CTA — only shown directly for patient role */}
             {selected === "patient" && (
               <button
                 className="ac-btn ac-btn-primary"
@@ -523,7 +648,6 @@ export default function Signup() {
               </button>
             )}
 
-            {/* For providers, show an "Open Details" button if panel closed */}
             {selected !== "patient" && !panelOpen && (
               <button
                 className="ac-btn ac-btn-primary"
@@ -552,6 +676,12 @@ export default function Signup() {
                 <span className="ac-info-val">{selectedRole.label}</span>
               </div>
               <div className="ac-info-row">
+                <span className="ac-info-key">ACTIVATION</span>
+                <span className={`ac-info-val ${selected === "patient" ? "ok" : "warn"}`}>
+                  {selected === "patient" ? "Instant ✓" : "Requires Approval"}
+                </span>
+              </div>
+              <div className="ac-info-row">
                 <span className="ac-info-key">NETWORK</span>
                 <span className={`ac-info-val ${networkOk === true ? "ok" : networkOk === false ? "err" : ""}`}>
                   {networkOk === true ? "Sepolia ✓" : networkOk === false ? "Wrong Network" : "—"}
@@ -559,13 +689,9 @@ export default function Signup() {
               </div>
               <div className="ac-info-row">
                 <span className="ac-info-key">DETAILS</span>
-                <span className={`ac-info-val ${needsDetails ? (isFormValid() ? "ok" : "warn") : "ok"}`}>
+                <span className={`ac-info-val ${!needsDetails ? "ok" : isFormValid() ? "ok" : "warn"}`}>
                   {!needsDetails ? "Not required" : isFormValid() ? "Complete ✓" : "Incomplete"}
                 </span>
-              </div>
-              <div className="ac-info-row">
-                <span className="ac-info-key">CONTRACT</span>
-                <span className="ac-info-val">{CONTRACT_ADDRESS.slice(0,10)}…</span>
               </div>
             </div>
 

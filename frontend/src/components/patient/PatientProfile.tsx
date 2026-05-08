@@ -77,170 +77,230 @@ function calcBMI(weightKg: string, heightCm: string): string {
 function generateProfilePDF(form: ProfileForm, account: string): File {
   const doc    = new jsPDF({ unit: "mm", format: "a4" });
   const W      = 210;
-  const margin = 14;
+  const margin = 16;
   const col    = W - margin * 2;
   let   y      = 0;
 
-  const hex  = (h: string) => [
-    parseInt(h.slice(1,3),16),
-    parseInt(h.slice(3,5),16),
-    parseInt(h.slice(5,7),16),
-  ] as [number,number,number];
-  const rgb  = (r:number,g:number,b:number) => doc.setTextColor(r,g,b);
-  const fill = (h:string) => { const [r,g,b]=hex(h); doc.setFillColor(r,g,b); };
-  const draw = (h:string) => { const [r,g,b]=hex(h); doc.setDrawColor(r,g,b); };
+  // ── Color helpers ──
+  const hexToRgb = (h: string): [number, number, number] => [
+    parseInt(h.slice(1, 3), 16),
+    parseInt(h.slice(3, 5), 16),
+    parseInt(h.slice(5, 7), 16),
+  ];
+  const setRgb  = (h: string) => { const [r,g,b] = hexToRgb(h); doc.setTextColor(r,g,b); };
+  const setFill = (h: string) => { const [r,g,b] = hexToRgb(h); doc.setFillColor(r,g,b); };
+  const setDraw = (h: string) => { const [r,g,b] = hexToRgb(h); doc.setDrawColor(r,g,b); };
 
   const checkPageBreak = (needed = 20) => {
-    if (y + needed > 275) { doc.addPage(); y = 16; }
+    if (y + needed > 275) { doc.addPage(); y = 18; }
   };
 
-  // ── Header ──
-  fill("#0d0f14"); doc.rect(0, 0, W, 42, "F");
-  fill("#ef4444"); doc.rect(0, 0, W, 3, "F"); // red accent — emergency profile
-  rgb(239,68,68); doc.setFont("helvetica","bold"); doc.setFontSize(8);
-  doc.text("AROGYACHAIN — EMERGENCY HEALTH PROFILE", margin, 12);
-  rgb(226,232,240); doc.setFontSize(18); doc.setFont("helvetica","bold");
-  doc.text(form.fullName || "Patient", margin, 24);
-  rgb(100,116,139); doc.setFontSize(7.5); doc.setFont("helvetica","normal");
-  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 32);
-  doc.text(`Wallet: ${account}`, margin, 37);
+  // ── HEADER ──
+  setFill("#0f1117"); doc.rect(0, 0, W, 46, "F");
+  // Red top accent bar
+  setFill("#dc2626"); doc.rect(0, 0, W, 2.5, "F");
+  // Subtle right-side branding strip
+  setFill("#1a1d27"); doc.rect(W - 52, 0, 52, 46, "F");
 
-  // Last updated timestamp — top right
-  rgb(239,68,68); doc.setFont("helvetica","bold"); doc.setFontSize(7);
-  doc.text("LAST UPDATED", W - margin, 30, { align: "right" });
-  rgb(226,232,240); doc.setFontSize(8);
-  doc.text(new Date().toLocaleDateString(), W - margin, 36, { align: "right" });
-  y = 50;
+  // Brand label
+  setRgb("#dc2626");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7);
+  doc.text("AROGYACHAIN", margin, 11);
+  setRgb("#475569");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+  doc.text("EMERGENCY HEALTH PROFILE  //  CONFIDENTIAL", margin + 33, 11);
 
-  // ── HIGH RISK ALERTS banner (if filled) ──
+  // Divider
+  setDraw("#dc2626"); doc.setLineWidth(0.3);
+  doc.line(margin, 14, W - margin, 14);
+
+  // Patient name
+  setRgb("#f1f5f9");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+  doc.text(form.fullName || "Patient", margin, 28);
+
+  // Meta info
+  setRgb("#64748b");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7);
+  doc.text(`Generated: ${new Date().toLocaleString()}`, margin, 35);
+  doc.text(`Wallet: ${account}`, margin, 40);
+
+  // Last updated — right column
+  setRgb("#dc2626");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(6.5);
+  doc.text("LAST UPDATED", W - margin, 32, { align: "right" });
+  setRgb("#f1f5f9");
+  doc.setFontSize(8);
+  doc.text(new Date().toLocaleDateString("en-GB"), W - margin, 38, { align: "right" });
+
+  y = 54;
+
+  // ── HIGH RISK ALERTS BANNER ──
   if (form.highRiskAlerts.trim()) {
-    fill("#7f1d1d"); draw("#ef4444");
-    doc.setLineWidth(0.5);
-    doc.roundedRect(margin, y, col, 10, 1, 1, "FD");
-    rgb(254,202,202); doc.setFont("helvetica","bold"); doc.setFontSize(8);
-    doc.text("⚠  HIGH RISK ALERTS: " + form.highRiskAlerts.replace(/\n/g, "  ·  "), margin + 3, y + 6.5);
-    y += 15;
+    checkPageBreak(14);
+    setFill("#7f1d1d"); setDraw("#ef4444");
+    doc.setLineWidth(0.4);
+    doc.roundedRect(margin, y, col, 11, 1.5, 1.5, "FD");
+    // Left accent stripe
+    setFill("#ef4444");
+    doc.rect(margin, y, 3, 11, "F");
+    setRgb("#fecaca");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
+    const alertText = "HIGH RISK ALERTS: " + form.highRiskAlerts.replace(/\n/g, "  |  ");
+    const alertLines = doc.splitTextToSize(alertText, col - 10);
+    doc.text(alertLines, margin + 6, y + 7);
+    y += 14 + (alertLines.length - 1) * 5;
   }
 
-  // ── Section header ──
-  const sectionHeader = (title: string, color = "#2563eb") => {
-    checkPageBreak(16);
-    fill("#eff6ff"); draw(color);
-    doc.setLineWidth(0.3);
-    doc.roundedRect(margin, y, col, 8, 1, 1, "FD");
-    doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
-    const [r,g,b] = hex(color);
+  // ── SECTION HEADER ──
+  const sectionHeader = (title: string, accentColor = "#2563eb") => {
+    checkPageBreak(18);
+    // Background
+    setFill("#f8fafc"); setDraw("#e2e8f0");
+    doc.setLineWidth(0.2);
+    doc.roundedRect(margin, y, col, 9, 1, 1, "FD");
+    // Left accent bar
+    const [r,g,b] = hexToRgb(accentColor);
+    doc.setFillColor(r,g,b);
+    doc.roundedRect(margin, y, 3, 9, 0.5, 0.5, "F");
+    // Label
     doc.setTextColor(r,g,b);
-    doc.text(title.toUpperCase(), margin + 3, y + 5.5);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+    doc.text(title.toUpperCase(), margin + 7, y + 6);
     y += 13;
   };
 
-  // ── Label: value row ──
+  // ── KEY-VALUE ROW ──
   const row = (label: string, value: string, highlight = false) => {
     if (!value.trim()) return;
-    checkPageBreak(10);
-    doc.setFont("helvetica","bold"); doc.setFontSize(8.5);
-    if (highlight) rgb(239,68,68); else rgb(100,116,139);
-    doc.text(label + ":", margin + 2, y);
-    doc.setFont("helvetica","normal");
-    if (highlight) rgb(30,41,59); else rgb(30,41,59);
-    const lines = doc.splitTextToSize(value, col - 40);
-    doc.text(lines, margin + 40, y);
-    y += lines.length * 5.5 + 2;
+    checkPageBreak(9);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+    if (highlight) { setRgb("#dc2626"); } else { setRgb("#94a3b8"); }
+    doc.text(label + ":", margin + 4, y);
+    doc.setFont("helvetica", "normal");
+    setRgb("#1e293b");
+    const lines = doc.splitTextToSize(value, col - 44);
+    doc.text(lines, margin + 42, y);
+    y += lines.length * 5.5 + 1.5;
   };
 
-  // ── Multiline block (for textareas) ──
-  const block = (content: string, lineHeight = 6) => {
+  // ── BULLET BLOCK ──
+  const block = (content: string) => {
     if (!content.trim()) {
-      doc.setFont("helvetica","italic"); doc.setFontSize(8.5); rgb(156,163,175);
-      doc.text("None reported", margin + 2, y);
+      doc.setFont("helvetica", "italic"); doc.setFontSize(8); setRgb("#94a3b8");
+      doc.text("None reported", margin + 4, y);
       y += 8;
       return;
     }
     const lines = content.split("\n").filter(l => l.trim());
     lines.forEach(line => {
-      checkPageBreak(10);
-      const wrapped = doc.splitTextToSize(`• ${line.trim()}`, col - 4);
-      doc.setFont("helvetica","normal"); doc.setFontSize(8.5); rgb(30,41,59);
-      doc.text(wrapped, margin + 2, y);
-      y += wrapped.length * lineHeight;
+      checkPageBreak(9);
+      // Bullet dot
+      setFill("#94a3b8");
+      doc.circle(margin + 5.5, y - 1.5, 0.8, "F");
+      const wrapped = doc.splitTextToSize(line.trim(), col - 12);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setRgb("#1e293b");
+      doc.text(wrapped, margin + 8, y);
+      y += wrapped.length * 5.8;
     });
-    y += 4;
+    y += 3;
   };
 
-  // ── BASIC INFO ──
+  // ── SEPARATOR LINE ──
+  const sep = () => {
+    checkPageBreak(6);
+    setDraw("#e2e8f0"); doc.setLineWidth(0.2);
+    doc.line(margin + 4, y - 1, W - margin - 4, y - 1);
+    y += 3;
+  };
+
+  // ── BASIC INFORMATION ──
   sectionHeader("Basic Information");
-  row("Full Name",    form.fullName    || "Not provided");
+  row("Full Name",     form.fullName    || "Not provided");
   row("Date of Birth", form.dateOfBirth || "Not provided");
-  row("Blood Type",   form.bloodType   || "Not provided", true); // highlight — critical
-  row("Weight",       form.weightKg ? `${form.weightKg} kg` : "Not provided", true);
-  row("Height",       form.heightCm ? `${form.heightCm} cm` : "Not provided");
+  row("Blood Type",    form.bloodType   || "Not provided", true);
+  row("Weight",        form.weightKg ? `${form.weightKg} kg` : "Not provided", true);
+  row("Height",        form.heightCm ? `${form.heightCm} cm` : "Not provided");
   const bmi = calcBMI(form.weightKg, form.heightCm);
   if (bmi) row("BMI", bmi);
-  y += 3;
+  y += 4;
 
   // ── EMERGENCY CONTACT ──
   sectionHeader("Emergency Contact", "#b45309");
   row("Name",     form.emergencyName     || "Not provided");
   row("Phone",    form.emergencyPhone    || "Not provided");
   row("Relation", form.emergencyRelation || "Not provided");
-  y += 3;
+  y += 4;
 
   // ── ALLERGIES ──
   sectionHeader("Allergies & Reactions", "#dc2626");
   block(form.allergies);
+  sep();
 
-  // ── CURRENT MEDICATIONS ──
+  // ── MEDICATIONS ──
   sectionHeader("Current Medications");
   block(form.currentMedications);
+  sep();
 
   // ── CHRONIC CONDITIONS ──
-  sectionHeader("Chronic Conditions & Risk Level");
+  sectionHeader("Chronic Conditions");
   block(form.chronicConditions);
+  sep();
 
   // ── RECENT DIAGNOSES ──
   sectionHeader("Recent Major Diagnoses");
   block(form.recentDiagnoses);
+  sep();
 
   // ── PAST SURGERIES ──
   sectionHeader("Past Surgeries / Procedures");
   block(form.pastSurgeries);
+  sep();
 
-  // ── IMPLANTS / DEVICES ──
+  // ── IMPLANTS ──
   sectionHeader("Medical Implants & Devices", "#7c3aed");
   block(form.implants);
 
   // ── TREATING DOCTOR ──
   if (form.treatingDoctor.trim()) {
+    sep();
     sectionHeader("Treating Doctor / Hospital");
     block(form.treatingDoctor);
   }
 
   // ── ORGAN DONOR ──
   if (form.organDonor.trim()) {
-    checkPageBreak(20);
-    fill("#f0fdf4"); draw("#16a34a");
-    doc.setLineWidth(0.3);
-    doc.roundedRect(margin, y, col, 10, 1, 1, "FD");
-    rgb(21,128,61); doc.setFont("helvetica","bold"); doc.setFontSize(8);
-    doc.text(`ORGAN DONOR STATUS: ${form.organDonor}`, margin + 3, y + 6.5);
-    y += 15;
+    checkPageBreak(16);
+    y += 4;
+    setFill("#f0fdf4"); setDraw("#16a34a");
+    doc.setLineWidth(0.4);
+    doc.roundedRect(margin, y, col, 11, 1.5, 1.5, "FD");
+    setFill("#16a34a");
+    doc.rect(margin, y, 3, 11, "F");
+    setRgb("#15803d");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8);
+    doc.text(`ORGAN DONOR: ${form.organDonor}`, margin + 7, y + 7);
+    y += 16;
   }
 
-  // ── Footer ──
+  // ── FOOTER (all pages) ──
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    fill("#0d0f14"); doc.rect(0, 285, W, 12, "F");
-    rgb(71,85,105); doc.setFontSize(7); doc.setFont("helvetica","normal");
-    doc.text("ArogyaChain — Emergency Health Profile (Confidential)", margin, 291);
+    setFill("#0f1117");
+    doc.rect(0, 285, W, 12, "F");
+    setDraw("#dc2626"); doc.setLineWidth(0.3);
+    doc.line(0, 285, W, 285);
+    setRgb("#475569");
+    doc.setFontSize(6.5); doc.setFont("helvetica", "normal");
+    doc.text("ArogyaChain — Emergency Health Profile — CONFIDENTIAL", margin, 291);
     doc.text(`Page ${i} of ${pages}`, W - margin, 291, { align: "right" });
   }
 
   const blob = doc.output("blob");
   return new File(
     [blob],
-    `health-profile-${account.slice(0,8)}.pdf`,
+    `health-profile-${account.slice(0, 8)}.pdf`,
     { type: "application/pdf" }
   );
 }

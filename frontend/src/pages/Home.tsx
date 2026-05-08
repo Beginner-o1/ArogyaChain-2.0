@@ -459,7 +459,7 @@ export default function Home() {
                 </svg>
               </Link>
               
-              <a href="https://sepolia.etherscan.io/address/0x0E46E42E6eAf8Af9584AcD7A8db4c4f8B5Be738a"
+              <a href="https://sepolia.etherscan.io/address/0x9187B4E2f143fd9C04AB86Bc893dd34C278C7A6f"
                 target="_blank" rel="noopener noreferrer"
                 className="btn-outline"
               >
@@ -468,7 +468,7 @@ export default function Home() {
             </div>  
 
             
-              <a href="https://sepolia.etherscan.io/address/0x0E46E42E6eAf8Af9584AcD7A8db4c4f8B5Be738a"
+              <a href="https://sepolia.etherscan.io/address/0x9187B4E2f143fd9C04AB86Bc893dd34C278C7A6f"
                 target="_blank" rel="noopener noreferrer"
                 className="contract-chip"
               >
